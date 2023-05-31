@@ -1,0 +1,9 @@
+{
+    "name": "pettersonapps.geeklab-sdk.Tests",
+  
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+  
+    "references":[ "GUID:9aa4805b5d78751489d8e1ffabf496e3" ]
+}

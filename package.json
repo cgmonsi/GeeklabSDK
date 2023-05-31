@@ -1,0 +1,33 @@
+{
+    "name": "com.pettersonapps.geeklab-sdk",
+    "displayName": "Geeklab SDK",
+    "version": "0.1.1",
+    "unity": "2023.1",
+    "description": "Geeklab SDK is a set of utilities for development in Unity. It includes tools for handling deep links, collecting metrics, managing network requests, and much more.",
+    "keywords": [
+        "unity",
+        "package",
+        "Geeklab",
+        "SDK",
+        "metrics"
+    ],
+    "author": {
+        "name": "PettersonApps",
+        "email": "monsicg@gmail.com"
+    },
+    "dependencies": {
+        "com.unity.ads": "3.7.5",
+        "com.unity.purchasing": "4.1.5"
+    },
+    "repository": {
+        "url": "https://github.com/cgmonsi/GeeklabSDK.git",
+        "type": "git"
+    },
+    "samples": [
+        {
+            "displayName": "SDK Sample",
+            "description": "This sample shows how to use the Geeklab SDK in a Unity game. It demonstrates tracking user actions and sending this data to Geeklab, helping developers start using the Geeklab SDK in their own apps.",
+            "path": "Samples/SDK Sample"
+        }
+    ]
+}

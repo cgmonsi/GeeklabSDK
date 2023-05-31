@@ -1,0 +1,24 @@
+{
+    "name": "pettersonapps.geeklab-sdk",
+    "rootNamespace": "",
+    "references": [
+        "Purchasing.Common",
+        "UnityEngine.Purchasing",
+        "UnityEditor.Purchasing",
+        "UnityEngine.Advertisements",
+        "UnityEngine.Purchasing.Stores"
+    ],
+    "includePlatforms": [
+        "Android",
+        "Editor",
+        "iOS"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

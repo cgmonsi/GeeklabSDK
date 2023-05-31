@@ -1,0 +1,12 @@
+{
+    "name": "pettersonapps.geeklab-sdk.Editor.Tests",
+    
+    "references": [
+        "Purchasing.Common",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Advertisements"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ]
+}
