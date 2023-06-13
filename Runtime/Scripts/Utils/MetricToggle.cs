@@ -16,11 +16,12 @@ public class MetricToggle : MonoBehaviour
         {
             WebRequestManager.Instance.CheckDataCollectionStatusRequest(
                 (response) => {
-                    Debug.Log("Success: " + response);
+                    if (SDKSettingsModel.Instance.ShowDebugLog)
+                        Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Success: {response}");
                     dataCollectionActive = bool.Parse(response);
                 },
                 (error) => {
-                    Debug.LogError("Error: " + error);
+                    Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}");
                 }
             );
             

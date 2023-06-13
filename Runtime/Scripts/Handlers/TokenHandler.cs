@@ -8,15 +8,23 @@ public class TokenHandler : MonoBehaviour
     private static string creativeToken = "";
     
     private void Awake() {
-        // If deep-link is present, read the creative token from it
-        DeepLinkHandler.CheckDeepLink();
+        var deepLink = DeepLinkHandler.CheckDeepLink();
+        var clipboard = ClipboardHandler.ReadClipboard();
         
-        // If deep-link is not present, try to read the creative token from clipboard
-        if (GetToken() == "")
+        // If deep-link is present, read the creative token from it
+        if (deepLink.Trim() != "")
         {
-            var clipboard = ClipboardHandler.ReadClipboard();
-            SetToken(clipboard);
+            if (SDKSettingsModel.Instance.ShowDebugLog)
+                Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Token from DeepLink = {GetToken()}");
         }
+
+        // // If deep-link is not present, try to read the creative token from clipboard
+        // if (clipboard.Trim() != "")
+        // {
+        //     SetToken(clipboard);
+        //     if (SDKSettingsModel.Instance.ShowDebugLog)
+        //         Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Token from Clipboard = {GetToken()}");
+        // }
         
         // // If there is still no token, get one from Geeklab endpoint
         // if (GetToken() == "")
@@ -24,13 +32,13 @@ public class TokenHandler : MonoBehaviour
         //     GetTokenFromGeeklab();
         // }
         
-        // If there is still no token, just create it
-        if (GetToken() == "")
-        {
-            CreateNewToken();
-        }
-
-        // Debug.Log($"Token = {GetToken()}");
+        // // If there is still no token, just create it
+        // if (GetToken() == "")
+        // {
+        //     CreateNewToken();
+        //     if (SDKSettingsModel.Instance.ShowDebugLog)
+        //         Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} new Local Token = {GetToken()}");
+        // }
     }
     
     
@@ -80,17 +88,17 @@ public class TokenHandler : MonoBehaviour
     }
     
     
-    
     public static void GetTokenFromGeeklab()
     {
         WebRequestManager.Instance.GetTokenRequest(
             (response) => {
-                Debug.Log("tokenResponse: " + response);
-                var tokenResponse = JsonUtility.FromJson<TokenResponse>(response);
-                TokenHandler.SetToken(tokenResponse.token);
+                if (SDKSettingsModel.Instance.ShowDebugLog)
+                    Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} tokenResponse: {response}");
+                var tokenResponse = JsonUtility.FromJson<TokenResponseModel>(response);
+                SetToken(tokenResponse.token);
             },
             (error) => {
-                Debug.LogError("Error: " + error);
+                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}");
             }
         );
     }

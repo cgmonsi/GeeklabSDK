@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Serialization;
@@ -11,17 +10,12 @@ public class GeeklabSDK_TestClass : MonoBehaviour {
     
     private void Start()
     {
-        var testListItems = new Dictionary<string, ProductType> {
-            { "test", ProductType.Subscription }
-        };
-        GeeklabSDK.Instance.InitializePurchasing(testListItems);
-
-        toggleCollectServer.isOn = SDKInfoModel.CollectServerData;
+        toggleCollectServer.isOn = SDKSettingsModel.Instance.SendStatistics;
     }
     
     public void SetPurchase()
     { 
-        GeeklabSDK.BuyProduct("test");
+        GeeklabSDK.BuyProduct("test_123");
     }
     
     
@@ -44,8 +38,8 @@ public class GeeklabSDK_TestClass : MonoBehaviour {
     
     
     public void SwitchCollectServerData() {
-        GeeklabSDK.ToggleMetricsCollection(!SDKInfoModel.CollectServerData);
-        Debug.Log($"CollectServerData: {SDKInfoModel.CollectServerData}");
+        GeeklabSDK.ToggleMetricsCollection(!SDKSettingsModel.Instance.SendStatistics);
+        Debug.Log($"CollectServerData: {SDKSettingsModel.Instance.SendStatistics}");
     }
     
     

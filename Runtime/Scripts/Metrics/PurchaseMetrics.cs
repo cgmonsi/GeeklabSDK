@@ -8,8 +8,9 @@ public class PurchaseMetrics : MonoBehaviour, IStoreListener
 {
     public static event OnPurchaseMade PurchaseMadeEvent;
 
-    public static PurchaseMetrics Instance { get; private set; }
+    private static PurchaseMetrics Instance { get; set; }
 
+    private static bool isInitialized;
     private static string token;
     private static int valueOfPurchase;
     private static string idOfPurchasedItem;
@@ -27,46 +28,61 @@ public class PurchaseMetrics : MonoBehaviour, IStoreListener
         {
             Destroy(gameObject);
         }
+
+        InitializePurchasing();
     }
-    
-    
-    public void InitializePurchasing(Dictionary<string, ProductType> listItems) 
+
+
+    private static void InitializePurchasing() 
     {
         if (IsInitialized()) 
         {
             return;
         }
         
+        var purchasableItems = new Dictionary<string, ProductType> {};
+        foreach (var purchasableItem in SDKSettingsModel.Instance.purchasableItems)
+        {
+            purchasableItems.Add(purchasableItem.name, purchasableItem.type);
+        }
+        
         var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
-        foreach (var item in listItems) {
+        foreach (var item in purchasableItems) {
             builder.AddProduct(item.Key, item.Value);
         }
-        UnityPurchasing.Initialize(this, builder);
+
+        UnityPurchasing.Initialize(Instance, builder);
     }
     
     
     private static bool IsInitialized()
     {
-        return controller != null;
+        if (SDKSettingsModel.Instance.EnablePurchaseAnalytics)
+            return controller != null && isInitialized;
+        else
+            return false;
+            
     }
     
     
     public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
     {
+        isInitialized = true;
         PurchaseMetrics.controller = controller;
     }
 
     
     public void OnInitializeFailed(InitializationFailureReason error)
     {
-        Debug.Log("Initialization failed. Reason: " + error);
+        Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Initialization purchase failed. Reason: " + error);
         SendPurchaseMetrics();
     }
 
     
     public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e) 
     {
-        Debug.Log($"You've successfully bought the product: {e.purchasedProduct.definition.id}");
+        if (SDKSettingsModel.Instance.ShowDebugLog)
+            Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} You've successfully bought the product: {e.purchasedProduct.definition.id}");
         PurchaseMadeEvent?.Invoke(e.purchasedProduct.definition.id);
         SendPurchaseMetrics();
         return PurchaseProcessingResult.Complete;
@@ -75,7 +91,7 @@ public class PurchaseMetrics : MonoBehaviour, IStoreListener
 
     public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
     {
-        Debug.Log($"Purchase failed: {failureReason}");
+        Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Purchase failed: {failureReason}");
     }
     
     public static void BuyProduct(string productId)
@@ -86,17 +102,18 @@ public class PurchaseMetrics : MonoBehaviour, IStoreListener
 
             if (product != null && product.availableToPurchase)
             {
-                Debug.Log("Purchasing product asychronously: " + product.definition.id);
+                if (SDKSettingsModel.Instance.ShowDebugLog)
+                    Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Purchasing product asychronously: " + product.definition.id);
                 controller.InitiatePurchase(product);
             }
             else
             {
-                Debug.Log("BuyProduct: FAIL. Not purchasing product, either is not found or is not available for purchase");
+                Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} BuyProduct: FAIL. Not purchasing product, either is not found or is not available for purchase");
             }
         }
         else
         {
-            Debug.Log($"BuyProduct: FAIL. {productId} - Not initialized");
+            Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} BuyProduct: FAIL. {productId} - Not initialized");
 
         }
     }
@@ -119,12 +136,19 @@ public class PurchaseMetrics : MonoBehaviour, IStoreListener
 
     public static void SendPurchaseMetrics()
     {
-        if (!SDKInfoModel.CollectServerData) return;
+        if (!SDKSettingsModel.Instance.SendStatistics) return;
 
         var json = "{\"token\":\"" + token + "\"," +
                    "\"value_of_purchase\":" + valueOfPurchase + "," +
                    "\"id_of_purchased_item\":\"" + idOfPurchasedItem + "\"}";
         
-        WebRequestManager.Instance.SendPurchaseMetricsRequest(json, Debug.Log, Debug.LogError);
+        WebRequestManager.Instance.SendPurchaseMetricsRequest(json, s =>
+        {
+            if (SDKSettingsModel.Instance.ShowDebugLog)
+                Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+        }, s =>
+        {
+            Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+        });
     }
 }

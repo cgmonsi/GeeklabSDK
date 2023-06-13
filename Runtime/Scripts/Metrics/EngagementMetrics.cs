@@ -38,7 +38,7 @@ public class EngagementMetrics : MonoBehaviour
 
     public static void SendMetrics()
     {
-        if (!SDKInfoModel.CollectServerData) return;
+        if (!SDKSettingsModel.Instance.SendStatistics) return;
 
         var postData = new Dictionary<string, string>
         {

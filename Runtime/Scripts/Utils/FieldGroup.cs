@@ -1,7 +1,7 @@
-[System.AttributeUsage(System.AttributeTargets.Property)]
+[System.AttributeUsage(System.AttributeTargets.Field)]
 public class FieldGroup : System.Attribute
 {
-    public string GroupName { get; private set; }
+    public string GroupName;
 
     public FieldGroup(string groupName)
     {

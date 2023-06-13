@@ -9,7 +9,7 @@ public class DeviceInfoHandler : MonoBehaviour
     
     private void Start()
     {
-        sessionStartTime = DateTimeOffset.UtcNow; // UTC time is commonly used for server-related operations
+        sessionStartTime = DateTimeOffset.UtcNow;
     }
 
     private void OnApplicationPause(bool isPaused)
@@ -36,29 +36,31 @@ public class DeviceInfoHandler : MonoBehaviour
 
     
     public static void SendDeviceInfo() {
-        if (!SDKInfoModel.CollectServerData) return;
+        if (!SDKSettingsModel.Instance.SendStatistics) return;
         
         sessionDuration = DateTimeOffset.UtcNow - sessionStartTime;
         
         var deviceInfo = GetDeviceInfo();
         var json = JsonUtility.ToJson(deviceInfo);
 
-        Debug.Log(JsonUtility.ToJson(deviceInfo, true));
+        if (SDKSettingsModel.Instance.ShowDebugLog)
+            Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Device information = {JsonUtility.ToJson(deviceInfo, true)}");
         
         WebRequestManager.Instance.SendDeviceInfoRequest(json,
             (response) => {
-                Debug.Log("Device information successfully sent to Geeklab.: " + response);
+                if (SDKSettingsModel.Instance.ShowDebugLog)
+                    Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Device information successfully sent to Geeklab: {response}");
             },
             (error) => {
-                Debug.LogError("Error: " + error);
+                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}");
             }
         );
     }
 
 
-    private static DeviceInfo GetDeviceInfo()
+    private static DeviceInfoModel GetDeviceInfo()
     {
-        var deviceInfo = new DeviceInfo {
+        var deviceInfo = new DeviceInfoModel {
             Dpi = Screen.dpi,
             Width = Screen.width,
             Height = Screen.height,

@@ -9,14 +9,30 @@ using System;
 
 public class WebRequestManager : MonoBehaviour {
     public bool isDebugOn = true;
-    public static WebRequestManager Instance { get; private set; }
 
-    
+    private static WebRequestManager instance;
+    public static WebRequestManager Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                // Create new GameObject with WebRequestManager component
+                var go = new GameObject(nameof(WebRequestManager));
+                instance = go.AddComponent<WebRequestManager>();
+                DontDestroyOnLoad(go);
+            }
+
+            return instance;
+        }
+    }
+
+
     private void Awake()
     {
-        if (Instance == null)
+        if (instance == null)
         {
-            Instance = this;
+            instance = this;
             DontDestroyOnLoad(gameObject);
         }
         else
@@ -28,44 +44,44 @@ public class WebRequestManager : MonoBehaviour {
     
     public void SendDeviceInfoRequest(string json, Action<string> onSuccess, Action<string> onError = null)
     {
-        SendRequest(ApiEndpoints.SEND_DEVICE_INFO, json, onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
+        SendRequest(ApiEndpointsModel.SEND_DEVICE_INFO, json, onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
     }
     
     public void GetTokenRequest(Action<string> onSuccess, Action<string> onError = null)
     {
-        SendRequest(ApiEndpoints.GET_TOKEN, "", onSuccess, onError, UnityWebRequest.kHttpVerbGET);
+        SendRequest(ApiEndpointsModel.GET_TOKEN, "", onSuccess, onError, UnityWebRequest.kHttpVerbGET);
     }
     
     public void SetTokenRequest(string json, Action<string> onSuccess, Action<string> onError = null)
     {
-        SendRequest(ApiEndpoints.SEND_TOKEN + json, "", onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
+        SendRequest(ApiEndpointsModel.SEND_TOKEN + json, "", onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
     }
     
     
     public void CheckDataCollectionStatusRequest(Action<string> onSuccess, Action<string> onError = null)
     {
-        SendRequest(ApiEndpoints.CHECK_DATA_COLLECTION_STATUS, "", onSuccess, onError, UnityWebRequest.kHttpVerbGET);
+        SendRequest(ApiEndpointsModel.CHECK_DATA_COLLECTION_STATUS, "", onSuccess, onError, UnityWebRequest.kHttpVerbGET);
     }
     
     public void SendTokenRequest(string json, Action<string> onSuccess, Action<string> onError = null)
     {
-        SendRequest(ApiEndpoints.SEND_TOKEN, json, onSuccess, onError, UnityWebRequest.kHttpVerbGET);
+        SendRequest(ApiEndpointsModel.SEND_TOKEN, json, onSuccess, onError, UnityWebRequest.kHttpVerbGET);
     }
 
     
     public void SendAdMetricsRequest(string json, Action<string> onSuccess, Action<string> onError = null)
     {
-        SendRequest(ApiEndpoints.SEND_AD_METRICS, json, onSuccess, onError);
+        SendRequest(ApiEndpointsModel.SEND_AD_METRICS, json, onSuccess, onError);
     }
     
     public void SendEngagementMetricsRequest(string json, Action<string> onSuccess, Action<string> onError = null)
     {
-        SendRequest(ApiEndpoints.SEND_ENGAGEMENT_METRICS, json, onSuccess, onError);
+        SendRequest(ApiEndpointsModel.SEND_ENGAGEMENT_METRICS, json, onSuccess, onError);
     }
     
     public void SendPurchaseMetricsRequest(string json, Action<string> onSuccess, Action<string> onError = null)
     {
-        SendRequest(ApiEndpoints.SEND_PURCHASE_METRICS, json, onSuccess, onError);
+        SendRequest(ApiEndpointsModel.SEND_PURCHASE_METRICS, json, onSuccess, onError);
     }
     
     
@@ -77,7 +93,7 @@ public class WebRequestManager : MonoBehaviour {
         }
         else
         {
-            Debug.LogWarning("There is no Internet connection. Please check your connection and try again.");
+            Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} There is no Internet connection. Please check your connection and try again.");
         }
     }
     
@@ -129,9 +145,9 @@ public class WebRequestManager : MonoBehaviour {
 
     private void DebugLogError(string message, Action<string> onError) {
         if (onError == null && isDebugOn) {
-            Debug.Log(message);
+            Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {message}");
         } else {
-            onError?.Invoke($"Unexpected exception encountered: {message}");
+            onError?.Invoke($"{SDKSettingsModel.GetColorPrefixLog()} Unexpected exception encountered: {message}");
         }
     }
 }

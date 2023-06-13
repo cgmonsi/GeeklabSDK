@@ -5,13 +5,13 @@ public class DeepLinkHandler : MonoBehaviour
     private static string deepLink;
     
 
-    public static void CheckDeepLink()
+    public static string CheckDeepLink()
     {
         deepLink = Application.absoluteURL;
         // InitTestDeepLinking();
         
         if (string.IsNullOrEmpty(deepLink)) {
-            return;
+            return "";
         }
 
         var creativeToken = ParseDeepLink(deepLink);
@@ -20,6 +20,8 @@ public class DeepLinkHandler : MonoBehaviour
         {
             TokenHandler.SetToken(creativeToken);
         }
+        
+        return creativeToken;
     }
     
     private static string ParseDeepLink(string deepLink)

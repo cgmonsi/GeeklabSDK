@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class GeeklabSDK : MonoBehaviour
 {
-    [SerializeField]
-    [Tooltip("Show Service in Hierarchy")]
     private bool showServiceInHierarchy;
 
     private static GeeklabSDK instance;
@@ -23,85 +21,74 @@ public class GeeklabSDK : MonoBehaviour
         return instance;
     }
     
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void OnBeforeSceneLoadRuntimeMethod() 
+    
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void OnAfterSceneLoadRuntimeMethod() 
     {
-        Initialize();
+        if (SDKSettingsModel.Instance.IsSDKEnabled)
+            Initialize();
     }
     
-
+    
     private void Awake()
     {
-        SDKInfoChecker.CheckSDKInfoModel();
-
+        if (SDKSettingsModel.Instance.ShowDebugLog)
+            Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} SDK Initialized!");
+        
+        //------Init All Managers and hide them------//
         var serviceLocator = new GameObject("ServiceLocator");
-        serviceLocator.AddComponent<ServiceLocator>();
+        serviceLocator.AddComponent<ServiceManager>();
         serviceLocator.hideFlags = showServiceInHierarchy ? serviceLocator.hideFlags : HideFlags.HideInHierarchy;
-    }
-    
-    
-    public void InitializePurchasing(Dictionary<string, ProductType> listItems)
-    {
-        Initialize();
-        PurchaseMetrics.Instance.InitializePurchasing(listItems);
+        gameObject.hideFlags = showServiceInHierarchy ? gameObject.hideFlags : HideFlags.HideInHierarchy;
     }
     
 
     public static void ShowAd()
     {
-        Initialize();
         AdMetrics.Instance.ShowAd();
     }
     
     public static void BuyProduct(string value)
     { 
-        Initialize();
         PurchaseMetrics.BuyProduct(value);
     }
     
     
     public static string GetDeepLink() 
     {
-        Initialize();
         return DeepLinkHandler.GetDeepLink();
     }
     
     public static string GetClipboard()
     { 
-        Initialize();
         return ClipboardHandler.ReadClipboard();
     }
     
     
     public static bool ToggleMetricsCollection(bool isEnabled)
     {
-        Initialize();
-        SDKInfoModel.CollectServerData = isEnabled;
-        return SDKInfoModel.CollectServerData;
+        SDKSettingsModel.Instance.SendStatistics = isEnabled;
+        return SDKSettingsModel.Instance.SendStatistics;
     }
     
     
     public static void SendEngagementMetrics()
     { 
-        Initialize();
         EngagementMetrics.SendMetrics();
     }
     
     public static void SendPurchaseMetrics() 
     {
-        Initialize();
         PurchaseMetrics.SendPurchaseMetrics();
     }
     
     public static void SendAdMetrics(Dictionary<string, string> postData)
     { 
-        Initialize();
         AdMetrics.SendMetrics(postData);
     }
     
     public static void SendDeviceInformation()
     { 
-        Initialize();
         DeviceInfoHandler.SendDeviceInfo();
     }
 }
