@@ -71,7 +71,7 @@ public class SDKSettingsModel : ScriptableObject {
     [DisableIfPurchaseAnalyticsDisabled ]
     [Header("Purchase Settings:")]
     [Header("Purchase Settings:")]
-    public List<PurchasableItemModel> purchasableItems = new List<PurchasableItemModel>(); // Add this line
+    public List<PurchasableItemModel> purchasableItems = new();
 
     
     private static string PrefixDebugLog = $"<color=#668cff>GeeklabSDK</color> <color=#666666>=></color>";

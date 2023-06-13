@@ -61,7 +61,7 @@ public class AdMetrics : MonoBehaviour, IUnityAdsListener
 
     public void ShowAd()
     {
-        if (!SDKSettingsModel.Instance.EnableAdAnalytics)
+        if (SDKSettingsModel.Instance.EnableAdAnalytics)
             Instance.StartCoroutine(WaitForAdInitialization());
     }
     
