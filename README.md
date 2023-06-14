@@ -35,6 +35,81 @@ That's it! You've successfully installed a Unity package from a GitHub repositor
 
 ---
 
+## Advertisements
+
+### Installation and Initialization:
+
+To start, ensure you have installed GeeklabSDK via our GitHub repo. The SDK automatically installs all necessary packages.
+
+### Setting Up GameID:
+
+Each platform (Android/iOS) requires a unique GameID, provided via the [Unity Dashboard](https://dashboard.unity.com/). You can find your GameID under the Monetization section of your project.
+
+![Setting Up GameID](Documentation~/Screenshots/Screenshot_005.png)
+
+
+### Entering the GameID into Unity:
+
+Once you have your GameID, enter it into the designated field for each platform in Unity's Ad settings.
+
+![Entering the GameID into Unity](Documentation~/Screenshots/Screenshot_006.png)
+
+### Enabling Test Mode:
+
+Test Mode allows you to test the ad functionality without actual impressions. You can enable Test Mode in Unity's Ad settings. Remember to disable it before going live.
+
+![Enabling Test Mode](Documentation~/Screenshots/Screenshot_007.png)
+
+* _For more detailed instructions, please refer to the official [Unity Ads Documentation](https://docs.unity.com/ads/en/manual/UnityAdsHome)_
+
+---
+
+## In-app Purchases
+
+
+### Enabling IAP in Unity Project:
+
+Ensure IAP Service is added to your project in the Unity Services window.
+
+![Enabling IAP in Unity Project](Documentation~/Screenshots/Screenshot_008.png)
+
+
+### Creating Purchaseable Items:
+
+To set up your items for purchase in your game, you'll first need to create them in the corresponding stores for each platform you want to target, namely Google Play for Android and App Store for iOS. Once created, you can then utilize them in your Unity project.
+
+1. Google Play Store (Android):
+
+a. Visit the Google Play Console and select your app.
+
+b. Go to the 'Monetize' section and then to 'Products' > 'In-app products'.
+
+c. Click on 'Create new product', fill in the product ID, name, description, and price.
+
+d. Save the changes and activate the product.
+
+2. Apple App Store (iOS):
+
+a. Visit App Store Connect and select your app.
+
+b. Go to the 'Features' section and then to 'In-App Purchases'.
+
+c. Click the '+' button to create a new in-app purchase, fill in the product ID, reference name, pricing, and other required information.
+
+d. Save the changes.
+
+### Entering the Product ID in Unity:
+
+After creating your purchase items, enter the corresponding IDs into the designated fields in Unity's IAP settings.
+Every purchasable item needs a unique ID. These can be created either via Unity's IAP Catalog or directly through the SDK, according to your needs. Make sure the product IDs are consistent across your code and the IAP Catalog/SDK's UI panel.
+
+![Unity's IAP Catalog](Documentation~/Screenshots/Screenshot_009.png)
+![SDK Purchaseable Items](Documentation~/Screenshots/Screenshot_010.png)
+
+* _For more detailed instructions, please refer to the official [Unity IAP Documentation](https://docs.unity3d.com/Manual/UnityIAP.html)_
+---
+
+
 ## Directory Structure
 ```
 ├── Handlers
@@ -42,19 +117,22 @@ That's it! You've successfully installed a Unity package from a GitHub repositor
 │   ├── DeviceInfoHandler.cs
 │   ├── ClipboardHandler.cs
 │   ├── TokenHandler.cs
+├── Managers
+│   ├── SDKSettingsManager.cs
+│   ├── ServiceManager.cs
+│   ├── WebRequestManager.cs
 ├── Metrics
+│   ├── AdMetrics.cs
 │   ├── EngagementMetrics.cs
 │   ├── PurchaseMetrics.cs
-│   ├── AdMetrics.cs
-├── Managers
-│   ├── WebRequestManager.cs
-├── Utils
-│   ├── MetricToggle.cs
 ├── Models
 │   ├── ApiEndpoints.cs
-│   ├── DeviceInfo.cs
-│   ├── Metrics.cs
-│   ├── TokenResponse.cs
+│   ├── DeviceInfoModel.cs
+│   ├── MetricsModel.cs
+│   ├── PurchasableItemListModel.cs
+│   ├── PurchasableItemModel.cs
+│   ├── SDKSettingsModel.cs
+│   ├── TokenResponseModel.cs
 ```
 
 

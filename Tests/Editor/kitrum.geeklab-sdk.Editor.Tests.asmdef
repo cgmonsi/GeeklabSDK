@@ -1,5 +1,5 @@
 {
-    "name": "pettersonapps.geeklab-sdk.Editor.Tests",
+    "name": "kitrum.geeklab-sdk.Editor.Tests",
     
     "references": [
         "Purchasing.Common",

@@ -1,5 +1,5 @@
 {
-    "name": "pettersonapps.geeklab-sdk",
+    "name": "kitrum.geeklab-sdk",
     "rootNamespace": "",
     "references": [
         "Purchasing.Common",

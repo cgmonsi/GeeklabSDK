@@ -1,11 +1,11 @@
 {
-    "name": "pettersonapps.geeklab-sdk.editor",
+    "name": "kitrum.geeklab-sdk.editor",
     "rootNamespace": "",
     "references": [
         "Purchasing.Common",
         "UnityEngine.Purchasing",
         "UnityEngine.Advertisements",
-        "pettersonapps.geeklab-sdk",
+        "kitrum.geeklab-sdk",
         "UnityEditor.Purchasing"
     ],
     "includePlatforms": [
