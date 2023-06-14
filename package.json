@@ -1,7 +1,7 @@
 {
     "name": "com.pettersonapps.geeklab-sdk",
     "displayName": "Geeklab SDK",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "unity": "2023.1",
     "description": "Geeklab SDK is a set of utilities for development in Unity. It includes tools for handling deep links, collecting metrics, managing network requests, and much more.",
     "keywords": [

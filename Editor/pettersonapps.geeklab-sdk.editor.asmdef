@@ -5,7 +5,8 @@
         "Purchasing.Common",
         "UnityEngine.Purchasing",
         "UnityEngine.Advertisements",
-        "pettersonapps.geeklab-sdk"
+        "pettersonapps.geeklab-sdk",
+        "UnityEditor.Purchasing"
     ],
     "includePlatforms": [
         "Editor"

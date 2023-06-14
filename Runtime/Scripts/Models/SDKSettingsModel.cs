@@ -35,11 +35,11 @@ public class SDKSettingsModel : ScriptableObject {
     
     [DisableIfSDKDisabled]
     [FieldGroup("Main Settings")]
-    public bool EnableAdAnalytics = true;
+    public bool EnableAdAnalytics = false;
     
     [DisableIfSDKDisabled]
     [FieldGroup("Main Settings")]
-    public bool EnablePurchaseAnalytics = true;
+    public bool EnablePurchaseAnalytics = false;
 
     [DisableIfSDKDisabled]
     [FieldGroup("Main Settings")]
