@@ -1,5 +1,10 @@
 using System;
 using UnityEngine;
 
-[AttributeUsage(AttributeTargets.Field)]
-public class DisableIfAdAnalyticsDisabled  : PropertyAttribute { }
+namespace Kitrum.GeeklabSDK
+{
+    [AttributeUsage(AttributeTargets.Field)]
+    public class DisableIfAdAnalyticsDisabled : PropertyAttribute
+    {
+    }
+}

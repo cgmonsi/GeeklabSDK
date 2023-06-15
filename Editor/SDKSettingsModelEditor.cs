@@ -5,49 +5,110 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Purchasing;
 
-[CustomEditor(typeof(SDKSettingsModel))]
-public class SDKSettingsModelEditor : Editor
+namespace Kitrum.GeeklabSDK
 {
-    private PurchasableItemListModel purchasableItems = new PurchasableItemListModel();
-
-
-    public override void OnInspectorGUI() {
-        SDKSettingsModel sdkSettings = (SDKSettingsModel)target;
-
-        // Draw default Inspector
-        DrawDefaultInspector();
+    [CustomEditor(typeof(SDKSettingsModel))]
+    public class SDKSettingsModelEditor : Editor
+    {
+        private PurchasableItemListModel purchasableItems = new PurchasableItemListModel();
+        public static bool isTokenVerified = false;
         
-        EditorGUILayout.Separator(); // separator line
-        
-        EditorGUILayout.BeginVertical(GUI.skin.box); // Start of box for PurchasableItems
-        DrawPurchasableItems(sdkSettings);
-        EditorGUILayout.EndVertical(); // End of box for PurchasableItems
-
-        if (GUI.changed)
+        private void OnEnable()
         {
-            EditorUtility.SetDirty(sdkSettings);
-            AssetDatabase.SaveAssets();
+            var sdkSettings = (SDKSettingsModel)target;
+            VerifySDKToken(sdkSettings);
         }
-    }
 
-    private void DrawPurchasableItems(SDKSettingsModel sdkSettings) {
-        EditorGUILayout.LabelField("Purchasable Items", EditorStyles.boldLabel);
-
-        for (int i = 0; i < sdkSettings.purchasableItems.Count; i++)
+        public override void OnInspectorGUI()
         {
-            EditorGUILayout.BeginHorizontal();
-            sdkSettings.purchasableItems[i].name = EditorGUILayout.TextField(sdkSettings.purchasableItems[i].name);
-            sdkSettings.purchasableItems[i].type = (ProductType)EditorGUILayout.EnumPopup(sdkSettings.purchasableItems[i].type);
-            if (GUILayout.Button("Remove"))
+            var sdkSettings = (SDKSettingsModel)target;
+
+            // If the token is not verified, do not show the default inspector and purchasable items
+            if (!SDKSettingsEditor.isTokenVerified)
             {
-                sdkSettings.purchasableItems.RemoveAt(i);
+                EditorGUILayout.HelpBox("Token not verified. Please verify your token in the SDK Settings window.", MessageType.Warning);
+
+                // Show the token as an input field
+                sdkSettings.Token = EditorGUILayout.TextField("Token", sdkSettings.Token);
+    
+                // Button for token verification
+                if (GUILayout.Button("Verify Token", GUILayout.Height(30), GUILayout.ExpandWidth(true)))
+                {
+                    VerifySDKToken(sdkSettings);
+                    // // Your token verification logic here
+                    // SDKSettingsEditor.isTokenVerified = SDKSettingsEditor.VerifySDKToken(sdkSettings.Token, sdkSettings);
+                    // if(SDKSettingsEditor.isTokenVerified)
+                    // {
+                    //     EditorUtility.SetDirty(sdkSettings);
+                    //     AssetDatabase.SaveAssets();
+                    // }
+                }
             }
-            EditorGUILayout.EndHorizontal();
+            else
+            {
+                // Disable token field after verification
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.TextField("Token", sdkSettings.Token);
+                EditorGUI.EndDisabledGroup();
+
+                // Button for clearing token
+                if (GUILayout.Button("Clear Token", GUILayout.Height(30), GUILayout.ExpandWidth(true)))
+                {
+                    sdkSettings.Token = "";
+                    SDKSettingsEditor.isTokenVerified = false;
+                    EditorUtility.SetDirty(sdkSettings);
+                    AssetDatabase.SaveAssets();
+                }
+                
+                // Draw default Inspector
+                DrawDefaultInspector();
+
+                EditorGUILayout.Separator(); // separator line
+
+                EditorGUILayout.BeginVertical(GUI.skin.box); // Start of box for PurchasableItems
+                DrawPurchasableItems(sdkSettings);
+                EditorGUILayout.EndVertical(); // End of box for PurchasableItems
+            }
+        
+            if (GUI.changed)
+            {
+                EditorUtility.SetDirty(sdkSettings);
+                AssetDatabase.SaveAssets();
+            }
         }
 
-        if (GUILayout.Button("Add Item"))
+        private static void VerifySDKToken(SDKSettingsModel sdkSettings)
         {
-            sdkSettings.purchasableItems.Add(new PurchasableItemModel());
+            SDKSettingsEditor.isTokenVerified = SDKSettingsEditor.VerifySDKToken(sdkSettings.Token, sdkSettings);
+            if(SDKSettingsEditor.isTokenVerified)
+            {
+                EditorUtility.SetDirty(sdkSettings);
+                AssetDatabase.SaveAssets();
+            }
+        }
+
+        private void DrawPurchasableItems(SDKSettingsModel sdkSettings)
+        {
+            EditorGUILayout.LabelField("Purchasable Items", EditorStyles.boldLabel);
+
+            for (int i = 0; i < sdkSettings.purchasableItems.Count; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                sdkSettings.purchasableItems[i].name = EditorGUILayout.TextField(sdkSettings.purchasableItems[i].name);
+                sdkSettings.purchasableItems[i].type =
+                    (ProductType)EditorGUILayout.EnumPopup(sdkSettings.purchasableItems[i].type);
+                if (GUILayout.Button("Remove"))
+                {
+                    sdkSettings.purchasableItems.RemoveAt(i);
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (GUILayout.Button("Add Item"))
+            {
+                sdkSettings.purchasableItems.Add(new PurchasableItemModel());
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Purchasing;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
+using UnityEngine;
+
 
 public class GeeklabSDK_TestClass : MonoBehaviour {
     [FormerlySerializedAs("toggle")] [SerializeField]
@@ -10,7 +10,7 @@ public class GeeklabSDK_TestClass : MonoBehaviour {
     
     private void Start()
     {
-        toggleCollectServer.isOn = SDKSettingsModel.Instance.SendStatistics;
+        toggleCollectServer.isOn = GeeklabSDK.GetIsMetricsCollection();
     }
     
     public void SetPurchase()
@@ -38,8 +38,8 @@ public class GeeklabSDK_TestClass : MonoBehaviour {
     
     
     public void SwitchCollectServerData() {
-        GeeklabSDK.ToggleMetricsCollection(!SDKSettingsModel.Instance.SendStatistics);
-        Debug.Log($"CollectServerData: {SDKSettingsModel.Instance.SendStatistics}");
+        GeeklabSDK.ToggleMetricsCollection(!GeeklabSDK.GetIsMetricsCollection());
+        Debug.Log($"CollectServerData: {GeeklabSDK.GetIsMetricsCollection()}");
     }
     
     

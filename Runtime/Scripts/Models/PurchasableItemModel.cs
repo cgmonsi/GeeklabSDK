@@ -1,9 +1,13 @@
 using System;
 using UnityEngine.Purchasing;
 
-[Serializable]
-public class PurchasableItemModel
+
+namespace Kitrum.GeeklabSDK
 {
-    public string name;
-    public ProductType type;
+    [Serializable]
+    public class PurchasableItemModel
+    {
+        public string name;
+        public ProductType type;
+    }
 }

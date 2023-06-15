@@ -1,10 +1,13 @@
-[System.AttributeUsage(System.AttributeTargets.Field)]
-public class FieldGroup : System.Attribute
+namespace Kitrum.GeeklabSDK
 {
-    public string GroupName;
-
-    public FieldGroup(string groupName)
+    [System.AttributeUsage(System.AttributeTargets.Field)]
+    public class FieldGroup : System.Attribute
     {
-        this.GroupName = groupName;
+        public string GroupName;
+
+        public FieldGroup(string groupName)
+        {
+            this.GroupName = groupName;
+        }
     }
 }

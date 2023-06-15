@@ -5,8 +5,7 @@
         "Purchasing.Common",
         "UnityEngine.Purchasing",
         "UnityEngine.Advertisements",
-        "kitrum.geeklab-sdk",
-        "UnityEditor.Purchasing"
+        "kitrum.geeklab-sdk"
     ],
     "includePlatforms": [
         "Editor"

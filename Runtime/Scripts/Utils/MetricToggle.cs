@@ -1,37 +1,40 @@
 using UnityEngine;
 using System.Collections;
 
-public class MetricToggle : MonoBehaviour
+
+namespace Kitrum.GeeklabSDK
 {
-    private bool dataCollectionActive;
-
-    public void InitializeMetrics()
+    public class MetricToggle : MonoBehaviour
     {
-        StartCoroutine(CheckDataCollectionStatus());
-    }
+        private bool dataCollectionActive;
+        private readonly WaitForSeconds waitForSeconds = new WaitForSeconds(5f);
 
-    private IEnumerator CheckDataCollectionStatus()
-    {
-        while (true)
+        public void InitializeMetrics()
         {
-            WebRequestManager.Instance.CheckDataCollectionStatusRequest(
-                (response) => {
-                    if (SDKSettingsModel.Instance.ShowDebugLog)
-                        Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Success: {response}");
-                    dataCollectionActive = bool.Parse(response);
-                },
-                (error) => {
-                    Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}");
-                }
-            );
-            
-            
-            yield return new WaitForSeconds(5);
+            StartCoroutine(CheckDataCollectionStatus());
         }
-    }
 
-    public bool IsDataCollectionActive()
-    {
-        return dataCollectionActive;
+        private IEnumerator CheckDataCollectionStatus()
+        {
+            while (true)
+            {
+                WebRequestManager.Instance.CheckDataCollectionStatusRequest(
+                    (response) =>
+                    {
+                        if (SDKSettingsModel.Instance.ShowDebugLog)
+                            Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Success: {response}");
+                        dataCollectionActive = bool.Parse(response);
+                    },
+                    (error) => { Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}"); }
+                );
+
+                yield return waitForSeconds;
+            }
+        }
+
+        public bool IsDataCollectionActive()
+        {
+            return dataCollectionActive;
+        }
     }
 }

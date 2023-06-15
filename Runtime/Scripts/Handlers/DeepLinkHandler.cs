@@ -1,43 +1,48 @@
 using UnityEngine;
 
-public class DeepLinkHandler : MonoBehaviour
+
+namespace Kitrum.GeeklabSDK
 {
-    private static string deepLink;
-    
-
-    public static string CheckDeepLink()
+    public class DeepLinkHandler : MonoBehaviour
     {
-        deepLink = Application.absoluteURL;
-        // InitTestDeepLinking();
-        
-        if (string.IsNullOrEmpty(deepLink)) {
-            return "";
-        }
+        private static string deepLink;
 
-        var creativeToken = ParseDeepLink(deepLink);
 
-        if (!string.IsNullOrEmpty(creativeToken))
+        public static string CheckDeepLink()
         {
-            TokenHandler.SetToken(creativeToken);
-        }
-        
-        return creativeToken;
-    }
-    
-    private static string ParseDeepLink(string deepLink)
-    {
-        var regex = new System.Text.RegularExpressions.Regex(@"[=\/\\]([^=\/\\]*)$");
-        var match = regex.Match(deepLink);
-        return match.Success ? match.Groups[1].Value : "";
-    }
+            deepLink = Application.absoluteURL;
+            // InitTestDeepLinking();
 
-    public static string GetDeepLink() 
-    {
-        return deepLink;
-    }
-    
-    private static void InitTestDeepLinking() 
-    {
-        deepLink = "App://web/path?creative_token=test_token";
+            if (string.IsNullOrEmpty(deepLink))
+            {
+                return "";
+            }
+
+            var creativeToken = ParseDeepLink(deepLink);
+
+            if (!string.IsNullOrEmpty(creativeToken))
+            {
+                TokenHandler.SetToken(creativeToken);
+            }
+
+            return creativeToken;
+        }
+
+        private static string ParseDeepLink(string deepLink)
+        {
+            var regex = new System.Text.RegularExpressions.Regex(@"[=\/\\]([^=\/\\]*)$");
+            var match = regex.Match(deepLink);
+            return match.Success ? match.Groups[1].Value : "";
+        }
+
+        public static string GetDeepLink()
+        {
+            return deepLink;
+        }
+
+        private static void InitTestDeepLinking()
+        {
+            deepLink = "App://web/path?creative_token=test_token";
+        }
     }
 }

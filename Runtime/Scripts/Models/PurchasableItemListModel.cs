@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 
-[Serializable]
-public class PurchasableItemListModel
+
+namespace Kitrum.GeeklabSDK
 {
-    public List<PurchasableItemModel> items;
+    [Serializable]
+    public class PurchasableItemListModel
+    {
+        public List<PurchasableItemModel> items;
+    }
 }

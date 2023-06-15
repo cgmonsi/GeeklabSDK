@@ -1,7 +1,10 @@
 using System;
 
-[Serializable]
-public class TokenResponseModel
+namespace Kitrum.GeeklabSDK
 {
-    public string token;
+    [Serializable]
+    public class TokenResponseModel
+    {
+        public string token;
+    }
 }
