@@ -130,6 +130,9 @@ public class GeeklabSDK : MonoBehaviour
     /// <param name="postData">Advertisement data to be sent</param>
     public static void SendAdMetrics(Dictionary<string, string> postData)
     {
+        if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
+            return;
+        
         AdMetrics.SendMetrics(postData);
     }
     
@@ -138,6 +141,9 @@ public class GeeklabSDK : MonoBehaviour
     /// </summary>
     public static void SendDeviceInformation()
     {
+        if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
+            return;
+        
         DeviceInfoHandler.SendDeviceInfo();
     }
     
