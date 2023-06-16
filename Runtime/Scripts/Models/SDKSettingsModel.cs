@@ -47,7 +47,7 @@ namespace Kitrum.GeeklabSDK
 
 
         [FieldGroup("Main Settings")] [Header("Main Settings")]
-        public bool IsSDKEnabled = true;
+        public bool IsSDKEnabled = false;
 
         [DisableIfSDKDisabled] [FieldGroup("Main Settings")]
         public bool EnableAdAnalytics = false;

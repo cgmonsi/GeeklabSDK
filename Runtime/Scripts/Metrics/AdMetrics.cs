@@ -64,11 +64,6 @@ namespace Kitrum.GeeklabSDK
             }
         }
 
-        public void ShowAd()
-        {
-            if (SDKSettingsModel.Instance.EnableAdAnalytics)
-                Instance.StartCoroutine(WaitForAdInitialization());
-        }
 
         private IEnumerator WaitForAdInitialization()
         {
@@ -119,8 +114,17 @@ namespace Kitrum.GeeklabSDK
             startWatchTime = Time.time - startWatchTime;
             SendMetrics();
         }
+        
+        
+        public void ShowAd()
+        {
+            if (!SDKSettingsModel.Instance.IsSDKEnabled || !SDKSettingsModel.Instance.EnableAdAnalytics) 
+                return;
 
-
+            Instance.StartCoroutine(WaitForAdInitialization());
+        }
+        
+        
         public static string SendMetrics(Dictionary<string, string> postData = null)
         {
             if (!SDKSettingsModel.Instance.SendStatistics) return null;

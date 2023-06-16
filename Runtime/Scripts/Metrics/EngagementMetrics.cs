@@ -49,9 +49,16 @@ namespace Kitrum.GeeklabSDK
                 { "sessionTime", sessionTime.ToString() },
                 { "levelPassed", levelPassed.ToString() }
             };
-
+            
             var json = JsonUtility.ToJson(postData);
-            WebRequestManager.Instance.SendEngagementMetricsRequest(json, Debug.Log, Debug.LogError);
+            WebRequestManager.Instance.SendEngagementMetricsRequest(json, s =>
+            {
+                if (SDKSettingsModel.Instance.ShowDebugLog)
+                    Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+            }, s =>
+            {
+                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+            });
         }
     }
 }

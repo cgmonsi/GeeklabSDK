@@ -12,7 +12,7 @@ namespace Kitrum.GeeklabSDK
     {
         private PurchasableItemListModel purchasableItems = new PurchasableItemListModel();
         public static bool isTokenVerified = false;
-        
+
         private void OnEnable()
         {
             var sdkSettings = (SDKSettingsModel)target;
@@ -30,27 +30,17 @@ namespace Kitrum.GeeklabSDK
 
                 // Show the token as an input field
                 sdkSettings.Token = EditorGUILayout.TextField("Token", sdkSettings.Token);
-    
+
                 // Button for token verification
                 if (GUILayout.Button("Verify Token", GUILayout.Height(30), GUILayout.ExpandWidth(true)))
                 {
                     VerifySDKToken(sdkSettings);
-                    // // Your token verification logic here
-                    // SDKSettingsEditor.isTokenVerified = SDKSettingsEditor.VerifySDKToken(sdkSettings.Token, sdkSettings);
-                    // if(SDKSettingsEditor.isTokenVerified)
-                    // {
-                    //     EditorUtility.SetDirty(sdkSettings);
-                    //     AssetDatabase.SaveAssets();
-                    // }
+                    Repaint();
+                    GUI.FocusControl(null);
                 }
             }
             else
             {
-                // Disable token field after verification
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.TextField("Token", sdkSettings.Token);
-                EditorGUI.EndDisabledGroup();
-
                 // Button for clearing token
                 if (GUILayout.Button("Clear Token", GUILayout.Height(30), GUILayout.ExpandWidth(true)))
                 {
@@ -58,7 +48,14 @@ namespace Kitrum.GeeklabSDK
                     SDKSettingsEditor.isTokenVerified = false;
                     EditorUtility.SetDirty(sdkSettings);
                     AssetDatabase.SaveAssets();
+                    GUI.FocusControl(null);
+                    Repaint();
                 }
+                
+                // Disable token field after verification
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.TextField("Token", sdkSettings.Token);
+                EditorGUI.EndDisabledGroup();
                 
                 // Draw default Inspector
                 DrawDefaultInspector();
@@ -80,6 +77,7 @@ namespace Kitrum.GeeklabSDK
         private static void VerifySDKToken(SDKSettingsModel sdkSettings)
         {
             SDKSettingsEditor.isTokenVerified = SDKSettingsEditor.VerifySDKToken(sdkSettings.Token, sdkSettings);
+            sdkSettings.IsSDKEnabled = SDKSettingsEditor.isTokenVerified;
             if(SDKSettingsEditor.isTokenVerified)
             {
                 EditorUtility.SetDirty(sdkSettings);

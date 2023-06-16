@@ -67,6 +67,28 @@ namespace Kitrum.GeeklabSDK
                 return false;
 
         }
+        
+        private static bool IsConfigFullyEnabled()
+        { 
+            if (SDKSettingsModel.Instance.IsSDKEnabled)
+            {
+                if (SDKSettingsModel.Instance.SendStatistics)
+                {
+                    return true;
+                }
+                else
+                {
+                    Debug.LogWarning($"Collection of information is disabled!\n" + 
+                                     "Please enable it in the GeeklabSDK -> SDK Setting menu");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"GeeklabSDK is disabled!\n" + 
+                                 "To work with the SDK, please enable it in the GeeklabSDK -> SDK Setting menu");
+            }
+            return false;
+        }
 
 
         public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
@@ -102,6 +124,9 @@ namespace Kitrum.GeeklabSDK
 
         public static void BuyProduct(string productId)
         {
+            if (!IsConfigFullyEnabled())
+                return;
+                
             if (IsInitialized())
             {
                 var product = controller.products.WithID(productId);
@@ -145,8 +170,9 @@ namespace Kitrum.GeeklabSDK
 
         public static void SendPurchaseMetrics()
         {
-            if (!SDKSettingsModel.Instance.SendStatistics) return;
-
+            if (!IsConfigFullyEnabled())
+                return;
+            
             var json = "{\"token\":\"" + token + "\"," +
                        "\"value_of_purchase\":" + valueOfPurchase + "," +
                        "\"id_of_purchased_item\":\"" + idOfPurchasedItem + "\"}";

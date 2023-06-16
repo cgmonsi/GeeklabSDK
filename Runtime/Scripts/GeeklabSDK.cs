@@ -48,6 +48,9 @@ public class GeeklabSDK : MonoBehaviour
     /// </summary>
     public static void ShowAd()
     {
+        if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.EnableAdAnalytics))
+            return;
+        
         AdMetrics.Instance.ShowAd();
     }
     
@@ -57,6 +60,9 @@ public class GeeklabSDK : MonoBehaviour
     /// <param name="value">Product ID</param>
     public static void BuyProduct(string value)
     { 
+        if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.EnablePurchaseAnalytics))
+            return;
+        
         PurchaseMetrics.BuyProduct(value);
     }
     
@@ -101,14 +107,20 @@ public class GeeklabSDK : MonoBehaviour
     /// </summary>
     public static void SendEngagementMetrics()
     { 
+        if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
+            return;
+        
         EngagementMetrics.SendMetrics();
     }
     
     /// <summary>
     /// Send purchase metrics to the server.
     /// </summary>
-    public static void SendPurchaseMetrics() 
+    public static void SendPurchaseMetrics()
     {
+        if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
+            return;
+        
         PurchaseMetrics.SendPurchaseMetrics();
     }
     
@@ -117,7 +129,7 @@ public class GeeklabSDK : MonoBehaviour
     /// </summary>
     /// <param name="postData">Advertisement data to be sent</param>
     public static void SendAdMetrics(Dictionary<string, string> postData)
-    { 
+    {
         AdMetrics.SendMetrics(postData);
     }
     
@@ -125,7 +137,30 @@ public class GeeklabSDK : MonoBehaviour
     /// Send device information to the server.
     /// </summary>
     public static void SendDeviceInformation()
-    { 
+    {
         DeviceInfoHandler.SendDeviceInfo();
+    }
+    
+    
+    private static bool IsConfigFullyEnabled(bool value)
+    { 
+        if (SDKSettingsModel.Instance.IsSDKEnabled)
+        {
+            if (value)
+            {
+                return true;
+            }
+            else
+            {
+                Debug.LogWarning($"This option is disabled in the settings!\n" + 
+                                 "Please enable it in the GeeklabSDK -> SDK Setting menu");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"GeeklabSDK is disabled!\n" + 
+                             "To work with the SDK, please enable it in the GeeklabSDK -> SDK Setting menu");
+        }
+        return false;
     }
 }

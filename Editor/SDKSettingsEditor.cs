@@ -17,7 +17,7 @@ namespace Kitrum.GeeklabSDK
 
         private SDKSettingsModel sdkSettings;
 
-        [MenuItem("GeekladSDK/SDK Settings")]
+        [MenuItem("GeeklabSDK/SDK Settings")]
         public static void ShowWindow()
         {
             GetWindow<SDKSettingsEditor>("SDK Settings").minSize = minWindowSize;
@@ -70,6 +70,8 @@ namespace Kitrum.GeeklabSDK
                     {
                         sdkSettings.Token = tokenInputField;
                         SaveSDKSettingsModel();
+                        Repaint();
+                        GUI.FocusControl(null);
                     }
                     else
                     {
@@ -85,6 +87,8 @@ namespace Kitrum.GeeklabSDK
                     tokenInputField = "";
                     isTokenVerified = false;
                     SaveSDKSettingsModel();
+                    Repaint();
+                    GUI.FocusControl(null);
                 }
                 
                 EditorGUI.BeginChangeCheck();

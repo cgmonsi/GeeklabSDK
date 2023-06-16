@@ -38,6 +38,30 @@ namespace Kitrum.GeeklabSDK
         }
 
 
+        private static DeviceInfoModel GetDeviceInfo()
+        {
+            var deviceInfo = new DeviceInfoModel
+            {
+                Dpi = Screen.dpi,
+                Width = Screen.width,
+                Height = Screen.height,
+                LowPower = SystemInfo.batteryLevel < 0.2f,
+                Timezone = System.TimeZoneInfo.Local.StandardName,
+                IosSystem = SystemInfo.operatingSystem,
+                DeviceName = SystemInfo.deviceName,
+                DeviceType = SystemInfo.deviceType.ToString(),
+                DeviceModel = SystemInfo.deviceModel,
+                GraphicsDeviceID = SystemInfo.graphicsDeviceID,
+                GraphicsDeviceVendor = SystemInfo.graphicsDeviceVendor,
+                GraphicsDeviceVersion = SystemInfo.graphicsDeviceVersion,
+                SessionStartTime = sessionStartTime.ToString(),
+                SessionDurationInSeconds = (int)sessionDuration.TotalSeconds
+            };
+
+            return deviceInfo;
+        }
+        
+        
         public static void SendDeviceInfo()
         {
             if (!SDKSettingsModel.Instance.SendStatistics) return;
@@ -60,30 +84,6 @@ namespace Kitrum.GeeklabSDK
                 },
                 (error) => { Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}"); }
             );
-        }
-
-
-        private static DeviceInfoModel GetDeviceInfo()
-        {
-            var deviceInfo = new DeviceInfoModel
-            {
-                Dpi = Screen.dpi,
-                Width = Screen.width,
-                Height = Screen.height,
-                LowPower = SystemInfo.batteryLevel < 0.2f,
-                Timezone = System.TimeZoneInfo.Local.StandardName,
-                IosSystem = SystemInfo.operatingSystem,
-                DeviceName = SystemInfo.deviceName,
-                DeviceType = SystemInfo.deviceType.ToString(),
-                DeviceModel = SystemInfo.deviceModel,
-                GraphicsDeviceID = SystemInfo.graphicsDeviceID,
-                GraphicsDeviceVendor = SystemInfo.graphicsDeviceVendor,
-                GraphicsDeviceVersion = SystemInfo.graphicsDeviceVersion,
-                SessionStartTime = sessionStartTime.ToString(),
-                SessionDurationInSeconds = (int)sessionDuration.TotalSeconds
-            };
-
-            return deviceInfo;
         }
     }
 }
