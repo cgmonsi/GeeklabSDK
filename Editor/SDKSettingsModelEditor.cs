@@ -2,7 +2,9 @@
 using UnityEditor;
 #endif
 
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.Purchasing;
 
 namespace Kitrum.GeeklabSDK
@@ -11,12 +13,33 @@ namespace Kitrum.GeeklabSDK
     public class SDKSettingsModelEditor : Editor
     {
         private PurchasableItemListModel purchasableItems = new PurchasableItemListModel();
-        public static bool isTokenVerified = false;
+        private static SDKSettingsModelEditor _instance;
+
+        private SDKSettingsModelEditor()
+        {
+        }
+        
+        
+        public static SDKSettingsModelEditor GetInstance()
+        {
+            if (_instance == null)
+            {
+                _instance = new SDKSettingsModelEditor();
+            }
+
+            return _instance;
+        }
 
         private void OnEnable()
         {
             var sdkSettings = (SDKSettingsModel)target;
-            VerifySDKToken(sdkSettings);
+            if (PlayerPrefs.HasKey("SDKToken"))
+            {
+                sdkSettings.Token = PlayerPrefs.GetString("SDKToken");
+                SDKTokenModel.Instance.Token = sdkSettings.Token;
+                SDKTokenModel.Instance.IsTokenVerified = true;
+            }
+            // VerifySDKToken(sdkSettings);
         }
 
         public override void OnInspectorGUI()
@@ -24,7 +47,7 @@ namespace Kitrum.GeeklabSDK
             var sdkSettings = (SDKSettingsModel)target;
 
             // If the token is not verified, do not show the default inspector and purchasable items
-            if (!SDKSettingsEditor.isTokenVerified)
+            if (!SDKTokenModel.Instance.IsTokenVerified)
             {
                 EditorGUILayout.HelpBox("Token not verified. Please verify your token in the SDK Settings window.", MessageType.Warning);
 
@@ -45,7 +68,10 @@ namespace Kitrum.GeeklabSDK
                 if (GUILayout.Button("Clear Token", GUILayout.Height(30), GUILayout.ExpandWidth(true)))
                 {
                     sdkSettings.Token = "";
-                    SDKSettingsEditor.isTokenVerified = false;
+                    SDKTokenModel.Instance.IsTokenVerified = false;
+                    SDKTokenModel.Instance.Token = "";
+                    PlayerPrefs.DeleteKey("SDKToken");
+                    PlayerPrefs.Save();
                     EditorUtility.SetDirty(sdkSettings);
                     AssetDatabase.SaveAssets();
                     GUI.FocusControl(null);
@@ -74,16 +100,42 @@ namespace Kitrum.GeeklabSDK
             }
         }
 
-        private static void VerifySDKToken(SDKSettingsModel sdkSettings)
+        private static async void VerifySDKToken(SDKSettingsModel sdkSettings)
         {
-            SDKSettingsEditor.isTokenVerified = SDKSettingsEditor.VerifySDKToken(sdkSettings.Token, sdkSettings);
-            sdkSettings.IsSDKEnabled = SDKSettingsEditor.isTokenVerified;
-            if(SDKSettingsEditor.isTokenVerified)
+            if (string.IsNullOrEmpty(sdkSettings.Token)) // check if the token field is empty
             {
+                return;
+            }
+    
+            var tcs = new TaskCompletionSource<bool>();
+            var www = UnityWebRequest.Get(ApiEndpointsModel.VERIFY_API_KEY);
+            www.SetRequestHeader("Authorization", "Bearer " + sdkSettings.Token);
+
+            www.SendWebRequest().completed += _ => tcs.SetResult(true);
+
+            await tcs.Task;
+
+#if UNITY_2020_2_OR_NEWER
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+#else
+            if (www.isNetworkError || www.isHttpError)
+#endif
+            {
+                EditorUtility.DisplayDialog("Error", "Invalid SDK token. Please try again.", "OK");
+                SDKTokenModel.Instance.IsTokenVerified = false;
+                SDKTokenModel.Instance.Token = "";
+            }
+            else
+            {
+                SDKTokenModel.Instance.IsTokenVerified = true;
+                SDKTokenModel.Instance.Token = sdkSettings.Token;
+                PlayerPrefs.SetString("SDKToken", sdkSettings.Token);
+                PlayerPrefs.Save();
                 EditorUtility.SetDirty(sdkSettings);
                 AssetDatabase.SaveAssets();
             }
         }
+
 
         private void DrawPurchasableItems(SDKSettingsModel sdkSettings)
         {

@@ -43,28 +43,28 @@ public class GeeklabSDK_TestClass : MonoBehaviour {
     }
     
     
-    public void SendEngagementMetrics()
-    { 
-        GeeklabSDK.SendEngagementMetrics();
-    }
     
-    public void SendPurchaseMetrics() 
+    public void SendPurchaseMetrics()
     {
-        GeeklabSDK.SendPurchaseMetrics();
+        var postData = new List<object>
+        {
+            new { id = "item1", price = 10 },
+            new { id = "item2", price = 20 },
+        };
+        GeeklabSDK.SendCustomPurchaseMetrics(postData);
     }
     
     public void SendAdMetrics()
     { 
-        var postData = new Dictionary<string, string> {
-            { "adId", "123" },
-            { "adStatus", "Finished" },
-            { "watchedSeconds", "5" }
+        var postData = new List<object>
+        {
+            new { id = "Test", status = "Showed" },
         };
-        GeeklabSDK.SendAdMetrics(postData);
+        GeeklabSDK.SendCustomAdMetrics(postData);
     }
     
     public void SendDeviceInformation()
     { 
-        GeeklabSDK.SendDeviceInformation();
+        GeeklabSDK.SendUserMetrics();
     }
 }

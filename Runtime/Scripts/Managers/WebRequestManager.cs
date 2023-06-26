@@ -5,13 +5,15 @@ using UnityEngine;
 using System.Net;
 using System.IO;
 using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 
 namespace Kitrum.GeeklabSDK
 {
     public class WebRequestManager : MonoBehaviour
     {
-        public bool isDebugOn = true;
+        private static bool isDebugOn = true;
 
         private static WebRequestManager instance;
 
@@ -45,12 +47,38 @@ namespace Kitrum.GeeklabSDK
             }
         }
 
-
-        public void SendDeviceInfoRequest(string json, Action<string> onSuccess, Action<string> onError = null)
+        
+        public void CheckDataCollectionStatusRequest(Action<string> onSuccess = null, Action<string> onError = null)
         {
-            SendRequest(ApiEndpointsModel.SEND_DEVICE_INFO, json, onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
+            SendRequest(ApiEndpointsModel.CHECK_DATA_COLLECTION_STATUS, "", onSuccess, onError,
+                UnityWebRequest.kHttpVerbGET);
+        }
+        
+
+        public void SendUserMetricsRequest(string data, Action<string> onSuccess = null, Action<string> onError = null)
+        {
+            SendWebhookRequest("user.metrics", data, onSuccess, onError);
         }
 
+        public void SendAdEventRequest(string data, bool isCustom, Action<string> onSuccess = null, Action<string> onError = null)
+        {
+            var type = "ad.event";
+            if (isCustom) type = "custom.ad.event";
+
+            SendWebhookRequest(type, data, onSuccess, onError);
+        }
+        
+
+        public void SendPurchaseMetricsRequest(string data, bool isCustom, Action<string> onSuccess = null, Action<string> onError = null)
+        {
+            var type = "purchase";
+            if (isCustom) type = "custom.purchase";
+                
+            SendWebhookRequest(type, data, onSuccess, onError);
+        }
+        
+
+        
         public void GetTokenRequest(Action<string> onSuccess, Action<string> onError = null)
         {
             SendRequest(ApiEndpointsModel.GET_TOKEN, "", onSuccess, onError, UnityWebRequest.kHttpVerbGET);
@@ -60,42 +88,46 @@ namespace Kitrum.GeeklabSDK
         {
             SendRequest(ApiEndpointsModel.SEND_TOKEN + json, "", onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
         }
-
-
-        public void CheckDataCollectionStatusRequest(Action<string> onSuccess, Action<string> onError = null)
-        {
-            SendRequest(ApiEndpointsModel.CHECK_DATA_COLLECTION_STATUS, "", onSuccess, onError,
-                UnityWebRequest.kHttpVerbGET);
-        }
-
+        
         public void SendTokenRequest(string json, Action<string> onSuccess, Action<string> onError = null)
         {
             SendRequest(ApiEndpointsModel.SEND_TOKEN, json, onSuccess, onError, UnityWebRequest.kHttpVerbGET);
         }
-
-
-        public void SendAdMetricsRequest(string json, Action<string> onSuccess, Action<string> onError = null)
+        
+        public void VerifyAPIKeyRequest(Dictionary<string, string> headerData = null, Action<string> onSuccess = null, Action<string> onError = null)
         {
-            SendRequest(ApiEndpointsModel.SEND_AD_METRICS, json, onSuccess, onError);
+            headerData ??= new Dictionary<string, string>
+            {
+                { "bearerAuth", ApiEndpointsModel.TEST_TOKEN },
+            };
+            SendRequest(ApiEndpointsModel.VERIFY_API_KEY, "", onSuccess, onError, UnityWebRequest.kHttpVerbPOST, headerData);
         }
 
-        public void SendEngagementMetricsRequest(string json, Action<string> onSuccess, Action<string> onError = null)
+        
+        private void SendWebhookRequest(string type, string data, Action<string> onSuccess = null, Action<string> onError = null)
         {
-            SendRequest(ApiEndpointsModel.SEND_ENGAGEMENT_METRICS, json, onSuccess, onError);
+            var currentDate = DateTime.Now;
+            var currentDateText = currentDate.ToString("yyyy-MM-dd HH:mm:ss");
+
+            var postData = new
+            {
+                id = type,
+                type = type,
+                created = currentDateText,
+                data = data
+            };
+
+            var json = JsonConvert.SerializeObject(postData);
+            SendRequest(ApiEndpointsModel.WEBHOOK, json, onSuccess, onError);
         }
-
-        public void SendPurchaseMetricsRequest(string json, Action<string> onSuccess, Action<string> onError = null)
-        {
-            SendRequest(ApiEndpointsModel.SEND_PURCHASE_METRICS, json, onSuccess, onError);
-        }
-
-
+        
+        
         private void SendRequest(string endpoint, string json, Action<string> onSuccess, Action<string> onError = null,
-            string method = UnityWebRequest.kHttpVerbPOST)
+            string method = UnityWebRequest.kHttpVerbPOST, Dictionary<string, string> headerData = null)
         {
             if (IsInternetAvailable())
             {
-                StartCoroutine(SendRequestCoroutine(endpoint, json, onSuccess, onError, method));
+                StartCoroutine(SendRequestCoroutine(endpoint, json, onSuccess, onError, method, headerData));
             }
             else
             {
@@ -105,8 +137,8 @@ namespace Kitrum.GeeklabSDK
         }
 
 
-        private IEnumerator SendRequestCoroutine(string endpoint, string json, Action<string> onSuccess,
-            Action<string> onError, string method)
+        private static IEnumerator SendRequestCoroutine(string endpoint, string json, Action<string> onSuccess,
+            Action<string> onError, string method, Dictionary<string, string> headerData = null)
         {
             using var www = new UnityWebRequest(endpoint, method);
 
@@ -118,17 +150,43 @@ namespace Kitrum.GeeklabSDK
 
             www.downloadHandler = new DownloadHandlerBuffer();
             www.SetRequestHeader("Content-Type", "application/json");
+            if (headerData != null)
+            {
+                foreach (var headerItem in headerData)
+                {
+                    www.SetRequestHeader(headerItem.Key, headerItem.Value);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(SDKTokenModel.Instance.GetToken()))
+            {
+                www.SetRequestHeader("Authorization", "Bearer " + SDKTokenModel.Instance.GetToken());
+            }
             yield return www.SendWebRequest();
 
             if (www.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
             {
-                DebugLogError($"Error: {www.error}", onError);
+                switch (www.responseCode)
+                {
+                    case 400:
+                        DebugLogError("Bad request, data not formatted properly.", onError);
+                        break;
+                    case 401:
+                        DebugLogError("API key is not valid.", onError);
+                        break;
+                    case 500:
+                        DebugLogError("Server error.\n" + www.downloadHandler.text + "\n", onError);
+                        break;
+                    default:
+                        DebugLogError($"Error: {www.error}", onError);
+                        break;
+                }
             }
             else
             {
                 try
                 {
-                    onSuccess?.Invoke(www.downloadHandler.text);
+                    onSuccess?.Invoke(www.downloadHandler.text + "\nData Request:" + json + "\n");
                 }
                 catch (WebException webEx)
                 {
@@ -145,6 +203,7 @@ namespace Kitrum.GeeklabSDK
             }
         }
 
+
         private static bool IsInternetAvailable()
         {
             return Application.internetReachability != NetworkReachability.NotReachable;
@@ -152,7 +211,7 @@ namespace Kitrum.GeeklabSDK
 
 
 
-        private void DebugLogError(string message, Action<string> onError)
+        public static void DebugLogError(string message, Action<string> onError)
         {
             if (onError == null && isDebugOn)
             {
@@ -160,7 +219,7 @@ namespace Kitrum.GeeklabSDK
             }
             else
             {
-                onError?.Invoke($"{SDKSettingsModel.GetColorPrefixLog()} Unexpected exception encountered: {message}");
+                onError?.Invoke($"{SDKSettingsModel.GetColorPrefixLog()} {message}");
             }
         }
     }

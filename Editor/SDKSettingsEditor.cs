@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEditor;
 using System.Reflection;
+using UnityEngine.Networking;
 using UnityEngine.Purchasing;
 
 
@@ -12,8 +13,8 @@ namespace Kitrum.GeeklabSDK
         private static Vector2 minWindowSize = new Vector2(250, 300);
         
         private bool missingValues;
-        public static bool isTokenVerified = false;
         private string tokenInputField = "";
+        private bool isRequestInProgress = false;
 
         private SDKSettingsModel sdkSettings;
 
@@ -37,20 +38,32 @@ namespace Kitrum.GeeklabSDK
             Debug.LogError("Could not find SDKSettings asset!");
             return;
 #endif
+                
+                if (PlayerPrefs.HasKey("SDKToken"))
+                {
+                    sdkSettings.Token = PlayerPrefs.GetString("SDKToken");
+                    SDKTokenModel.Instance.Token = sdkSettings.Token;
+                    SDKTokenModel.Instance.IsTokenVerified = !string.IsNullOrEmpty(sdkSettings.Token);
+                }
             }
 
             var path = AssetDatabase.GUIDToAssetPath(guids[0]);
             sdkSettings = AssetDatabase.LoadAssetAtPath<SDKSettingsModel>(path);
-            tokenInputField = sdkSettings.Token;
-
-            // Automatically verify the token upon enabling
-            if (!string.IsNullOrEmpty(sdkSettings.Token))
+            if (sdkSettings != null && sdkSettings.Token != null)
             {
-                isTokenVerified = VerifySDKToken(sdkSettings.Token, sdkSettings);
+                tokenInputField = sdkSettings.Token;
+                SDKTokenModel.Instance.IsTokenVerified = !string.IsNullOrEmpty(sdkSettings.Token);
             }
-            
+
             missingValues = false;
         }
+        
+        
+        private void OnDisable()
+        {
+            SaveSDKSettingsModel();
+        }
+        
 
         private void OnGUI()
         {
@@ -59,24 +72,21 @@ namespace Kitrum.GeeklabSDK
                 EditorGUILayout.HelpBox("Not all fields are filled in.", MessageType.Warning);
             }
 
-            if (!isTokenVerified)
+            if (!SDKTokenModel.Instance.IsTokenVerified)
             {
                 GUILayout.Label("Enter your SDK token:", EditorStyles.boldLabel);
                 tokenInputField = EditorGUILayout.TextField("SDK Token", tokenInputField);
+                EditorGUI.BeginDisabledGroup(isRequestInProgress); // Disable the button when a request is in progress
                 if (GUILayout.Button("Verify Token", GUILayout.Height(30)))
+                { 
+                    VerifySDKToken(tokenInputField);
+                }
+                EditorGUI.EndDisabledGroup(); // End of disable group
+                
+                if (isRequestInProgress)
                 {
-                    isTokenVerified = VerifySDKToken(tokenInputField, sdkSettings);
-                    if (isTokenVerified)
-                    {
-                        sdkSettings.Token = tokenInputField;
-                        SaveSDKSettingsModel();
-                        Repaint();
-                        GUI.FocusControl(null);
-                    }
-                    else
-                    {
-                        EditorUtility.DisplayDialog("Error", "Invalid SDK token. Please try again.", "OK");
-                    }
+                    // Display the message while the request is in progress
+                    GUILayout.Label("➔ Verification is in progress! This may take up to a minute. Please wait...", EditorStyles.wordWrappedMiniLabel);
                 }
             }
             else
@@ -85,11 +95,15 @@ namespace Kitrum.GeeklabSDK
                 {
                     sdkSettings.Token = "";
                     tokenInputField = "";
-                    isTokenVerified = false;
+                    SDKTokenModel.Instance.IsTokenVerified = false;
+                    SDKTokenModel.Instance.Token = "";
+                    PlayerPrefs.DeleteKey("SDKToken");
+                    PlayerPrefs.Save();
                     SaveSDKSettingsModel();
                     Repaint();
                     GUI.FocusControl(null);
                 }
+
                 
                 EditorGUI.BeginChangeCheck();
                 EditorGUILayout.BeginVertical(GUI.skin.box); // Start of box for SDKSettingsModel
@@ -113,6 +127,46 @@ namespace Kitrum.GeeklabSDK
                 }
             }
         }
+        
+        
+        private void VerifySDKToken(string token)
+        {
+            isRequestInProgress = true; // Add this line to indicate that a request is in progress
+            var www = UnityWebRequest.Get(ApiEndpointsModel.VERIFY_API_KEY);
+            www.SetRequestHeader("Authorization", "Bearer " + token);
+            www.SendWebRequest().completed += OnRequestCompleted;
+        }
+        
+        
+        private void OnRequestCompleted(AsyncOperation operation)
+        {
+            var wwwOp = operation as UnityWebRequestAsyncOperation;
+            var www = wwwOp.webRequest;
+
+#if UNITY_2020_2_OR_NEWER
+            if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
+#else
+            if (www.isNetworkError || www.isHttpError)
+#endif
+            {
+                EditorUtility.DisplayDialog("Error", "Invalid SDK token. Please try again.", "OK");
+                SDKTokenModel.Instance.IsTokenVerified = false; 
+                SDKTokenModel.Instance.Token = "";
+            }
+            else
+            {
+                SDKTokenModel.Instance.IsTokenVerified = true;
+                SDKTokenModel.Instance.Token = tokenInputField;
+                sdkSettings.Token = tokenInputField;
+                SaveSDKSettingsModel();
+                PlayerPrefs.SetString("SDKToken", tokenInputField);
+                PlayerPrefs.Save();
+            }
+
+            isRequestInProgress = false; // Indicate that the request has finished
+            Repaint();
+        }
+        
 
         private void DrawSDKSettingsModel()
         {
@@ -161,17 +215,7 @@ namespace Kitrum.GeeklabSDK
                 EditorGUI.EndDisabledGroup();
             }
         }
-
         
-        public static bool VerifySDKToken(string token, SDKSettingsModel sdkSettings)
-        {
-            if (sdkSettings != null && token is "123")
-            {
-                sdkSettings.Token = token;
-                return true;
-            }
-            return false;
-        }
 
         private void DrawPurchasableItems()
         {
@@ -190,7 +234,8 @@ namespace Kitrum.GeeklabSDK
 
                 EditorGUILayout.EndHorizontal();
             }
-
+            
+            
             if (GUILayout.Button("Add Item"))
             {
                 sdkSettings.purchasableItems.Add(new PurchasableItemModel());

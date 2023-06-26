@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Advertisements;
 using System.Globalization;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Newtonsoft.Json;
 
 
 namespace Kitrum.GeeklabSDK
@@ -12,7 +14,6 @@ namespace Kitrum.GeeklabSDK
     public class AdMetrics : MonoBehaviour, IUnityAdsListener
     {
         private static float startWatchTime;
-        private static float watchedSeconds;
         private static string gameId;
         private static string adStatus;
         private static string platform;
@@ -21,9 +22,29 @@ namespace Kitrum.GeeklabSDK
         private const string REWARDED_ID = "Rewarded";
         private readonly WaitForSeconds waitForSeconds = new WaitForSeconds(0.5f);
 
-        public static AdMetrics Instance { get; private set; }
+        
+        public static AdMetrics Instance;
+        // public static AdMetrics Instance
+        // {
+        //     get
+        //     {
+        //         if (instance == null)
+        //         {
+        //             // Create new GameObject with WebRequestManager component
+        //             var go = new GameObject(nameof(AdMetrics));
+        //             instance = go.AddComponent<AdMetrics>();
+        //             DontDestroyOnLoad(go);
+        //         }
+        //
+        //         return instance;
+        //     }
+        // }
+        
+        // public static AdMetrics Instance { get; private set; }
         private static bool IsInitialized { get; set; }
-
+        public bool ShowAdWasCalled { get; set; }
+        public bool? IsUnityAdsReady { get; set; }
+        
 
         private void Awake()
         {
@@ -69,7 +90,6 @@ namespace Kitrum.GeeklabSDK
         {
             while (!Advertisement.IsReady(REWARDED_ID + "_" + platform))
             {
-                
                 yield return waitForSeconds;
             }
 
@@ -82,6 +102,8 @@ namespace Kitrum.GeeklabSDK
             if (SDKSettingsModel.Instance.ShowDebugLog)
                 Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} OnUnityAdsReady placementId - {placementId}");
             IsInitialized = true;
+            ShowAdWasCalled = false;
+            IsUnityAdsReady = true;
             adStatus = "";
         }
 
@@ -91,7 +113,17 @@ namespace Kitrum.GeeklabSDK
             Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Log the error: {message}");
             adStatus = $"Error: {message}";
             startWatchTime = Time.time - startWatchTime;
-            SendMetrics();
+            ShowAdWasCalled = true;
+            IsUnityAdsReady = false;
+            
+#pragma warning disable CS4014
+            var data = new List<object>
+            {
+                new { adStatus = "error", message = message },
+            };
+            var postData = JsonConverter.ConvertToJson(data);
+            SendMetrics(postData, true);
+#pragma warning restore CS4014
         }
 
 
@@ -100,7 +132,6 @@ namespace Kitrum.GeeklabSDK
             if (SDKSettingsModel.Instance.ShowDebugLog)
                 Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Ad started. PlacementId: {placementId}");
             adStatus = "Started";
-            watchedSeconds = 0.0f;
             startWatchTime = Time.time;
         }
 
@@ -112,7 +143,15 @@ namespace Kitrum.GeeklabSDK
                     $"{SDKSettingsModel.GetColorPrefixLog()} Ad finished. PlacementId: {placementId}, Result: {showResult}");
             adStatus = showResult.ToString();
             startWatchTime = Time.time - startWatchTime;
-            SendMetrics();
+            
+#pragma warning disable CS4014
+            var data = new List<object>
+            {
+                new { adStatus, placementId, watchTime = startWatchTime },
+            };
+            var postData = JsonConverter.ConvertToJson(data);
+            SendMetrics(postData, true);
+#pragma warning restore CS4014
         }
         
         
@@ -125,25 +164,25 @@ namespace Kitrum.GeeklabSDK
         }
         
         
-        public static string SendMetrics(Dictionary<string, string> postData = null)
+        public static async Task<bool> SendMetrics(string postData = null, bool isCustom = false)
         {
-            if (!SDKSettingsModel.Instance.SendStatistics) return null;
+            if (!SDKSettingsModel.Instance.SendStatistics) 
+                return false;
+            
+            var taskCompletionSource = new TaskCompletionSource<bool>();
 
-            postData ??= new Dictionary<string, string>
-            {
-                { "adId", gameId },
-                { "adStatus", adStatus },
-                { "watchedSeconds", watchedSeconds.ToString(CultureInfo.InvariantCulture) }
-            };
-
-            var json = JsonUtility.ToJson(postData);
-            WebRequestManager.Instance.SendAdMetricsRequest(json, s =>
+            WebRequestManager.Instance.SendAdEventRequest(postData, isCustom, s =>
             {
                 if (SDKSettingsModel.Instance.ShowDebugLog)
                     Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
-            }, s => { Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}"); });
-
-            return json;
+                taskCompletionSource.SetResult(true);
+            }, s =>
+            {
+                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+                taskCompletionSource.SetResult(false);
+            });
+          
+            return await taskCompletionSource.Task;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Kitrum.GeeklabSDK;
 using UnityEngine;
 
@@ -103,50 +104,43 @@ public class GeeklabSDK : MonoBehaviour
     }
 
     /// <summary>
-    /// Send engagement metrics to the server.
+    /// Send device information to the server.
     /// </summary>
-    public static void SendEngagementMetrics()
+    public static async Task<bool?> SendUserMetrics()
     { 
         if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
-            return;
+            return false;
         
-        EngagementMetrics.SendMetrics();
+        return await DeviceInfoHandler.SendDeviceInfo();
     }
     
     /// <summary>
-    /// Send purchase metrics to the server.
+    /// Send purchase metrics to the server
     /// </summary>
-    public static void SendPurchaseMetrics()
+    /// <param name="data">Purchase data. Can be a string, list, or dictionary.</param>
+    public static async Task<bool?> SendCustomPurchaseMetrics(object data)
     {
         if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
-            return;
-        
-        PurchaseMetrics.SendPurchaseMetrics();
+            return false;
+
+        var postData = JsonConverter.ConvertToJson(data);
+        return await PurchaseMetrics.SendPurchaseMetrics(postData);
     }
     
     /// <summary>
     /// Send advertisement metrics to the server.
     /// </summary>
-    /// <param name="postData">Advertisement data to be sent</param>
-    public static void SendAdMetrics(Dictionary<string, string> postData)
+    /// <param name="postData">Advertisement data to be sent. Can be a string, list, or dictionary.</param>
+    public static async Task<bool?> SendCustomAdMetrics(object data)
     {
         if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
-            return;
-        
-        AdMetrics.SendMetrics(postData);
+            return false;
+
+        var postData = JsonConverter.ConvertToJson(data);
+        return await AdMetrics.SendMetrics(postData);
     }
-    
-    /// <summary>
-    /// Send device information to the server.
-    /// </summary>
-    public static void SendDeviceInformation()
-    {
-        if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
-            return;
-        
-        DeviceInfoHandler.SendDeviceInfo();
-    }
-    
+
+
     
     private static bool IsConfigFullyEnabled(bool value)
     { 

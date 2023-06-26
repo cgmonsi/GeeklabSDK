@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Threading.Tasks;
 
 
 namespace Kitrum.GeeklabSDK
@@ -21,7 +22,9 @@ namespace Kitrum.GeeklabSDK
             {
                 // Game is paused, calculate session duration and send data
                 sessionDuration = DateTimeOffset.UtcNow - sessionStartTime;
+#pragma warning disable CS4014
                 SendDeviceInfo();
+#pragma warning restore CS4014
             }
             else
             {
@@ -34,7 +37,10 @@ namespace Kitrum.GeeklabSDK
         {
             // Game is quitting, calculate session duration and send data
             sessionDuration = DateTime.UtcNow - sessionStartTime;
+            
+#pragma warning disable CS4014
             SendDeviceInfo();
+#pragma warning restore CS4014
         }
 
 
@@ -62,28 +68,38 @@ namespace Kitrum.GeeklabSDK
         }
         
         
-        public static void SendDeviceInfo()
+        public static async Task<bool> SendDeviceInfo()
         {
-            if (!SDKSettingsModel.Instance.SendStatistics) return;
+            if (!SDKSettingsModel.Instance.SendStatistics) 
+                return false;
+
+            var taskCompletionSource = new TaskCompletionSource<bool>();
 
             sessionDuration = DateTimeOffset.UtcNow - sessionStartTime;
 
             var deviceInfo = GetDeviceInfo();
             var json = JsonUtility.ToJson(deviceInfo);
 
-            if (SDKSettingsModel.Instance.ShowDebugLog)
-                Debug.Log(
-                    $"{SDKSettingsModel.GetColorPrefixLog()} Device information = {JsonUtility.ToJson(deviceInfo, true)}");
+            // if (SDKSettingsModel.Instance.ShowDebugLog)
+            //     Debug.Log(
+            //         $"{SDKSettingsModel.GetColorPrefixLog()} Get Device Information = {JsonUtility.ToJson(deviceInfo, true)}");
 
-            WebRequestManager.Instance.SendDeviceInfoRequest(json,
+            WebRequestManager.Instance.SendUserMetricsRequest(json,
                 (response) =>
                 {
                     if (SDKSettingsModel.Instance.ShowDebugLog)
                         Debug.Log(
                             $"{SDKSettingsModel.GetColorPrefixLog()} Device information successfully sent to Geeklab: {response}");
+                    taskCompletionSource.SetResult(true);
                 },
-                (error) => { Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}"); }
+                (error) =>
+                {
+                    Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}");
+                    taskCompletionSource.SetResult(false);
+                }
             );
+            
+            return await taskCompletionSource.Task;
         }
     }
 }

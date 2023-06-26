@@ -50,15 +50,15 @@ namespace Kitrum.GeeklabSDK
                 { "levelPassed", levelPassed.ToString() }
             };
             
-            var json = JsonUtility.ToJson(postData);
-            WebRequestManager.Instance.SendEngagementMetricsRequest(json, s =>
-            {
-                if (SDKSettingsModel.Instance.ShowDebugLog)
-                    Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
-            }, s =>
-            {
-                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
-            });
+            // var json = JsonUtility.ToJson(postData);
+            // WebRequestManager.Instance.SendEngagementMetricsRequest(json, s =>
+            // {
+            //     if (SDKSettingsModel.Instance.ShowDebugLog)
+            //         Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+            // }, s =>
+            // {
+            //     Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+            // });
         }
     }
 }

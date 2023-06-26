@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Purchasing;
 
@@ -11,13 +12,29 @@ namespace Kitrum.GeeklabSDK
     {
         public static event OnPurchaseMade PurchaseMadeEvent;
 
-        private static PurchaseMetrics Instance { get; set; }
+        public static PurchaseMetrics Instance;
+        // public static PurchaseMetrics Instance
+        // {
+        //     get
+        //     {
+        //         if (instance == null)
+        //         {
+        //             // Create new GameObject with WebRequestManager component
+        //             var go = new GameObject(nameof(PurchaseMetrics));
+        //             instance = go.AddComponent<PurchaseMetrics>();
+        //             DontDestroyOnLoad(go);
+        //         }
+        //
+        //         return instance;
+        //     }
+        // }
 
         private static bool isInitialized;
         private static string token;
         private static int valueOfPurchase;
         private static string idOfPurchasedItem;
         private static IStoreController controller;
+        public bool? IsUnityPurchaseReady { get; set; }
 
 
         private void Awake()
@@ -94,15 +111,26 @@ namespace Kitrum.GeeklabSDK
         public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
         {
             isInitialized = true;
+            IsUnityPurchaseReady = true;
             PurchaseMetrics.controller = controller;
         }
 
 
         public void OnInitializeFailed(InitializationFailureReason error)
         {
+            isInitialized = false;
+            IsUnityPurchaseReady = false;
             Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Initialization purchase failed. Reason: " +
                              error);
-            SendPurchaseMetrics();
+            
+#pragma warning disable CS4014
+            var data = new List<object>
+            {
+                new { status = "failed", message = error.ToString() },
+            };
+            var postData = JsonConverter.ConvertToJson(data);
+            SendPurchaseMetrics(postData);
+#pragma warning restore CS4014
         }
 
 
@@ -112,7 +140,16 @@ namespace Kitrum.GeeklabSDK
                 Debug.Log(
                     $"{SDKSettingsModel.GetColorPrefixLog()} You've successfully bought the product: {e.purchasedProduct.definition.id}");
             PurchaseMadeEvent?.Invoke(e.purchasedProduct.definition.id);
-            SendPurchaseMetrics();
+            
+#pragma warning disable CS4014
+            var data = new List<object>
+            {
+                new { status = "success", id = e.purchasedProduct.definition.id },
+            };
+            var postData = JsonConverter.ConvertToJson(data);
+            SendPurchaseMetrics(postData);
+#pragma warning restore CS4014
+
             return PurchaseProcessingResult.Complete;
         }
 
@@ -153,35 +190,26 @@ namespace Kitrum.GeeklabSDK
         }
 
 
-        public static void Initialize(string token)
-        {
-            PurchaseMetrics.token = token;
-        }
-
-
-        public void UpdateMetrics(int valueOfPurchase, string idOfPurchasedItem)
-        {
-            PurchaseMetrics.valueOfPurchase = valueOfPurchase;
-            PurchaseMetrics.idOfPurchasedItem = idOfPurchasedItem;
-
-            SendPurchaseMetrics();
-        }
-
-
-        public static void SendPurchaseMetrics()
+        public static async Task<bool> SendPurchaseMetrics(string postData = null, bool isCustom = false)
         {
             if (!IsConfigFullyEnabled())
-                return;
+                return false;
             
-            var json = "{\"token\":\"" + token + "\"," +
-                       "\"value_of_purchase\":" + valueOfPurchase + "," +
-                       "\"id_of_purchased_item\":\"" + idOfPurchasedItem + "\"}";
+            var taskCompletionSource = new TaskCompletionSource<bool>();
 
-            WebRequestManager.Instance.SendPurchaseMetricsRequest(json, s =>
+            WebRequestManager.Instance.SendPurchaseMetricsRequest(postData, isCustom, s =>
             {
                 if (SDKSettingsModel.Instance.ShowDebugLog)
                     Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
-            }, s => { Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}"); });
+                
+                taskCompletionSource.SetResult(true);
+            }, s =>
+            {
+                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+                taskCompletionSource.SetResult(false);
+            });
+            
+            return await taskCompletionSource.Task;
         }
     }
 }
