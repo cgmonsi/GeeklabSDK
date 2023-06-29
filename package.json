@@ -29,7 +29,7 @@
         {
             "displayName": "SDK Sample",
             "description": "This sample shows how to use the Geeklab SDK in a Unity game. It demonstrates tracking user actions and sending this data to Geeklab, helping developers start using the Geeklab SDK in their own apps.",
-            "path": "Samples/SDK Sample"
+            "path": "Samples~"
         }
     ]
 }
