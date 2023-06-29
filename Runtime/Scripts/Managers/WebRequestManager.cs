@@ -96,10 +96,14 @@ namespace Kitrum.GeeklabSDK
         
         public void VerifyAPIKeyRequest(Dictionary<string, string> headerData = null, Action<string> onSuccess = null, Action<string> onError = null)
         {
-            headerData ??= new Dictionary<string, string>
+            if (headerData == null) 
             {
-                { "bearerAuth", ApiEndpointsModel.TEST_TOKEN },
-            };
+                headerData = new Dictionary<string, string>
+                {
+                    { "bearerAuth", ApiEndpointsModel.TEST_TOKEN }
+                };
+            }
+
             SendRequest(ApiEndpointsModel.VERIFY_API_KEY, "", onSuccess, onError, UnityWebRequest.kHttpVerbPOST, headerData);
         }
 
@@ -140,68 +144,74 @@ namespace Kitrum.GeeklabSDK
         private static IEnumerator SendRequestCoroutine(string endpoint, string json, Action<string> onSuccess,
             Action<string> onError, string method, Dictionary<string, string> headerData = null)
         {
-            using var www = new UnityWebRequest(endpoint, method);
+            using (UnityWebRequest www = new UnityWebRequest(endpoint, method))
+            {
+                if (method == UnityWebRequest.kHttpVerbPOST)
+                {
+                    var bodyRaw = Encoding.UTF8.GetBytes(json);
+                    www.uploadHandler = new UploadHandlerRaw(bodyRaw);
+                }
 
-            if (method == UnityWebRequest.kHttpVerbPOST)
-            {
-                var bodyRaw = Encoding.UTF8.GetBytes(json);
-                www.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            }
+                www.downloadHandler = new DownloadHandlerBuffer();
+                www.SetRequestHeader("Content-Type", "application/json");
 
-            www.downloadHandler = new DownloadHandlerBuffer();
-            www.SetRequestHeader("Content-Type", "application/json");
-            if (headerData != null)
-            {
-                foreach (var headerItem in headerData)
+                if (headerData != null)
                 {
-                    www.SetRequestHeader(headerItem.Key, headerItem.Value);
+                    foreach (var headerItem in headerData)
+                    {
+                        www.SetRequestHeader(headerItem.Key, headerItem.Value);
+                    }
                 }
-            }
 
-            if (!string.IsNullOrEmpty(SDKTokenModel.Instance.GetToken()))
-            {
-                www.SetRequestHeader("Authorization", "Bearer " + SDKTokenModel.Instance.GetToken());
-            }
-            yield return www.SendWebRequest();
+                if (!string.IsNullOrEmpty(SDKSettingsModel.Instance.Token))
+                {
+                    www.SetRequestHeader("Authorization", "Bearer " + SDKSettingsModel.Instance.Token);
+                }
 
-            if (www.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
-            {
-                switch (www.responseCode)
+                yield return www.SendWebRequest();
+
+#pragma warning disable CS0618
+                if (www.isNetworkError || www.isHttpError)
+#pragma warning restore CS0618
                 {
-                    case 400:
-                        DebugLogError("Bad request, data not formatted properly.", onError);
-                        break;
-                    case 401:
-                        DebugLogError("API key is not valid.", onError);
-                        break;
-                    case 500:
-                        DebugLogError("Server error.\n" + www.downloadHandler.text + "\n", onError);
-                        break;
-                    default:
-                        DebugLogError($"Error: {www.error}", onError);
-                        break;
+                    switch (www.responseCode)
+                    {
+                        case 400:
+                            DebugLogError("Bad request, data not formatted properly.", onError);
+                            break;
+                        case 401:
+                            DebugLogError("API key is not valid.", onError);
+                            break;
+                        case 500:
+                            DebugLogError("Server error.\n" + www.downloadHandler.text + "\n", onError);
+                            break;
+                        default:
+                            DebugLogError($"Error: {www.error}", onError);
+                            break;
+                    }
                 }
-            }
-            else
-            {
-                try
+                else
                 {
-                    onSuccess?.Invoke(www.downloadHandler.text + "\nData Request:" + json + "\n");
-                }
-                catch (WebException webEx)
-                {
-                    DebugLogError($"Exception encountered: {webEx.Message}", onError);
-                }
-                catch (IOException ioEx)
-                {
-                    DebugLogError($"IOException encountered: {ioEx.Message}", onError);
-                }
-                catch (Exception ex)
-                {
-                    DebugLogError($"Unexpected exception encountered: {ex.Message}", onError);
+                    try
+                    {
+                        onSuccess?.Invoke(www.downloadHandler.text + "\nData Request:" + json + "\n");
+                    }
+                    catch (WebException webEx)
+                    {
+                        DebugLogError($"Exception encountered: {webEx.Message}", onError);
+                    }
+                    catch (IOException ioEx)
+                    {
+                        DebugLogError($"IOException encountered: {ioEx.Message}", onError);
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugLogError($"Unexpected exception encountered: {ex.Message}", onError);
+                    }
                 }
             }
         }
+
 
 
         private static bool IsInternetAvailable()

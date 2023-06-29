@@ -11,7 +11,12 @@ using Newtonsoft.Json;
 namespace Kitrum.GeeklabSDK
 {
     [RequireComponent(typeof(AdMetrics))]
-    public class AdMetrics : MonoBehaviour, IUnityAdsListener
+    public class AdMetrics : MonoBehaviour
+#if UNITY_2020_1_OR_NEWER
+        , IUnityAdsLoadListener, IUnityAdsInitializationListener, IUnityAdsShowListener
+#else
+        , IUnityAdsListener
+#endif
     {
         private static float startWatchTime;
         private static string gameId;
@@ -61,10 +66,14 @@ namespace Kitrum.GeeklabSDK
             if (!SDKSettingsModel.Instance.EnableAdAnalytics)
                 return;
 
+#if UNITY_2020_1_OR_NEWER
+#else
             Advertisement.AddListener(this);
+#endif
+            
 
 #if UNITY_ANDROID
-            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode);
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode, this);
             gameId = SDKSettingsModel.Instance.GameIdAndroid;
             platform = "Android";
 #elif UNITY_IOS
@@ -72,14 +81,14 @@ namespace Kitrum.GeeklabSDK
         gameId = SDKSettingsModel.Instance.GameIdIOS;
         platform = "iOS";
 #else
-        Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode);
+        Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode, this);
         gameId = SDKSettingsModel.Instance.GameIdAndroid;
         Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Unsupported platform to AD");
         platform = "Android";
 #endif
 
             var eventSystems = FindObjectsOfType<EventSystem>();
-            if (eventSystems is { Length: >= 2 })
+            if (eventSystems.Length >= 2)
             {
                 Destroy(eventSystems[0].gameObject);
             }
@@ -88,12 +97,19 @@ namespace Kitrum.GeeklabSDK
 
         private IEnumerator WaitForAdInitialization()
         {
+#if UNITY_2020_1_OR_NEWER
+            while (!Advertisement.isInitialized)
+            {
+                yield return waitForSeconds;
+            }   
+            Advertisement.Show(REWARDED_ID + "_" + platform, this);
+#else
             while (!Advertisement.IsReady(REWARDED_ID + "_" + platform))
             {
                 yield return waitForSeconds;
-            }
-
+            }   
             Advertisement.Show(REWARDED_ID + "_" + platform);
+#endif
         }
 
 
@@ -138,10 +154,16 @@ namespace Kitrum.GeeklabSDK
 
         public void OnUnityAdsDidFinish(string placementId, ShowResult showResult)
         {
+            OnUnityAdsFinish(placementId, showResult.ToString());
+        }
+        
+        
+        public void OnUnityAdsFinish(string placementId, string showResult)
+        {
             if (SDKSettingsModel.Instance.ShowDebugLog)
                 Debug.Log(
                     $"{SDKSettingsModel.GetColorPrefixLog()} Ad finished. PlacementId: {placementId}, Result: {showResult}");
-            adStatus = showResult.ToString();
+            adStatus = showResult;
             startWatchTime = Time.time - startWatchTime;
             
 #pragma warning disable CS4014
@@ -176,13 +198,60 @@ namespace Kitrum.GeeklabSDK
                 if (SDKSettingsModel.Instance.ShowDebugLog)
                     Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
                 taskCompletionSource.SetResult(true);
-            }, s =>
+            }, error =>
             {
-                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+                Debug.LogError(error);
                 taskCompletionSource.SetResult(false);
             });
           
             return await taskCompletionSource.Task;
         }
+
+        
+#if UNITY_2020_1_OR_NEWER
+        public void OnUnityAdsAdLoaded(string placementId)
+        {
+            OnUnityAdsReady(placementId);
+        }
+
+        public void OnUnityAdsFailedToLoad(string placementId, UnityAdsLoadError error, string message)
+        {
+            OnUnityAdsDidError(message);
+        }
+        
+        public void OnInitializationComplete()
+        {
+            if (SDKSettingsModel.Instance.ShowDebugLog)
+                Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Unity Ads Initialization Complete");
+        }
+
+        public void OnInitializationFailed(UnityAdsInitializationError error, string message)
+        {            
+            if (SDKSettingsModel.Instance.ShowDebugLog)
+                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Unity Ads Initialization Failed: {error.ToString()} - {message}");
+        }
+        
+        public void OnUnityAdsShowFailure(string placementId, UnityAdsShowError error, string message)
+        {
+            if (SDKSettingsModel.Instance.ShowDebugLog)
+                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Unity Ads Show Failure: {error.ToString()} - {message}");
+        }
+
+        public void OnUnityAdsShowStart(string placementId)
+        {
+            OnUnityAdsDidStart(placementId);
+        }
+
+        public void OnUnityAdsShowClick(string placementId)
+        {
+            if (SDKSettingsModel.Instance.ShowDebugLog)
+                Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Unity Ads Show Clicked: {placementId}");
+        }
+
+        public void OnUnityAdsShowComplete(string placementId, UnityAdsShowCompletionState showCompletionState)
+        {
+            OnUnityAdsFinish(placementId, showCompletionState.ToString());
+        }
+#endif
     }
 }

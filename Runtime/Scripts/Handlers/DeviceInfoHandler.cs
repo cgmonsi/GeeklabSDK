@@ -94,7 +94,7 @@ namespace Kitrum.GeeklabSDK
                 },
                 (error) =>
                 {
-                    Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} Error: {error}");
+                    Debug.LogError(error);
                     taskCompletionSource.SetResult(false);
                 }
             );

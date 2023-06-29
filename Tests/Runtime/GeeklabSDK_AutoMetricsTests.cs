@@ -3,7 +3,9 @@ using Kitrum.GeeklabSDK;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Advertisements;
+using UnityEngine.Assertions;
 using UnityEngine.TestTools;
+using Assert = NUnit.Framework.Assert;
 
 
 public class GeeklabSDK_AutoMetricsTests {

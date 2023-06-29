@@ -1,14 +1,20 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Purchasing;
 
-
 namespace Kitrum.GeeklabSDK
 {
     public delegate void OnPurchaseMade(string productId);
 
-    public class PurchaseMetrics : MonoBehaviour, IStoreListener
+    public class PurchaseMetrics : MonoBehaviour
+#if UNITY_2020_1_OR_NEWER
+        , IStoreListener, IStoreController
+#else
+        , IStoreListener
+#endif
+
     {
         public static event OnPurchaseMade PurchaseMadeEvent;
 
@@ -48,7 +54,7 @@ namespace Kitrum.GeeklabSDK
             {
                 Destroy(gameObject);
             }
-
+            
             InitializePurchasing();
         }
 
@@ -72,7 +78,9 @@ namespace Kitrum.GeeklabSDK
                 builder.AddProduct(item.Key, item.Value);
             }
 
+#pragma warning disable CS0618
             UnityPurchasing.Initialize(Instance, builder);
+#pragma warning restore CS0618
         }
 
 
@@ -131,6 +139,11 @@ namespace Kitrum.GeeklabSDK
             var postData = JsonConverter.ConvertToJson(data);
             SendPurchaseMetrics(postData);
 #pragma warning restore CS4014
+        }
+
+        public void OnInitializeFailed(InitializationFailureReason error, string message)
+        {
+            throw new NotImplementedException();
         }
 
 
@@ -203,13 +216,52 @@ namespace Kitrum.GeeklabSDK
                     Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
                 
                 taskCompletionSource.SetResult(true);
-            }, s =>
+            }, error =>
             {
-                Debug.LogError($"{SDKSettingsModel.GetColorPrefixLog()} {s}");
+                Debug.LogError(error);
                 taskCompletionSource.SetResult(false);
             });
             
             return await taskCompletionSource.Task;
         }
+
+        
+#if UNITY_2020_1_OR_NEWER
+        public ProductCollection products { get; }
+        public void InitiatePurchase(Product product, string payload)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void InitiatePurchase(string productId, string payload)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void InitiatePurchase(Product product)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void InitiatePurchase(string productId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback, Action<InitializationFailureReason> failCallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback, Action<InitializationFailureReason, string> failCallback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ConfirmPendingPurchase(Product product)
+        {
+            throw new NotImplementedException();
+        }
+#endif
     }
 }

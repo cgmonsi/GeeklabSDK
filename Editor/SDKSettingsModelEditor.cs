@@ -33,9 +33,9 @@ namespace Kitrum.GeeklabSDK
         private void OnEnable()
         {
             var sdkSettings = (SDKSettingsModel)target;
-            if (PlayerPrefs.HasKey("SDKToken"))
+            if (!string.IsNullOrEmpty((SDKSettingsModel.Instance.Token)))
             {
-                sdkSettings.Token = PlayerPrefs.GetString("SDKToken");
+                sdkSettings.Token = SDKSettingsModel.Instance.Token;
                 SDKTokenModel.Instance.Token = sdkSettings.Token;
                 SDKTokenModel.Instance.IsTokenVerified = true;
             }
@@ -70,8 +70,9 @@ namespace Kitrum.GeeklabSDK
                     sdkSettings.Token = "";
                     SDKTokenModel.Instance.IsTokenVerified = false;
                     SDKTokenModel.Instance.Token = "";
-                    PlayerPrefs.DeleteKey("SDKToken");
-                    PlayerPrefs.Save();
+                    SDKSettingsModel.Instance.Token = "";
+                    // PlayerPrefs.DeleteKey("SDKToken");
+                    // PlayerPrefs.Save();
                     EditorUtility.SetDirty(sdkSettings);
                     AssetDatabase.SaveAssets();
                     GUI.FocusControl(null);
@@ -129,8 +130,9 @@ namespace Kitrum.GeeklabSDK
             {
                 SDKTokenModel.Instance.IsTokenVerified = true;
                 SDKTokenModel.Instance.Token = sdkSettings.Token;
-                PlayerPrefs.SetString("SDKToken", sdkSettings.Token);
-                PlayerPrefs.Save();
+                SDKSettingsModel.Instance.Token = sdkSettings.Token;
+                // PlayerPrefs.SetString("SDKToken", sdkSettings.Token);
+                // PlayerPrefs.Save();
                 EditorUtility.SetDirty(sdkSettings);
                 AssetDatabase.SaveAssets();
             }

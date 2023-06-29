@@ -75,7 +75,7 @@ namespace Kitrum.GeeklabSDK
         [DisableIfSDKDisabled]
         [DisableIfPurchaseAnalyticsDisabled]
         [Header("Purchase Settings:")]
-        public List<PurchasableItemModel> purchasableItems = new();
+        public List<PurchasableItemModel> purchasableItems = new List<PurchasableItemModel>();
 
 
         private static string PrefixDebugLog = $"<color=#668cff>GeeklabSDK</color> <color=#666666>=></color>";

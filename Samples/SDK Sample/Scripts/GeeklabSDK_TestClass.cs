@@ -2,16 +2,13 @@ using System.Collections.Generic;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using UnityEngine;
+using Kitrum.GeeklabSDK;
 
 
 public class GeeklabSDK_TestClass : MonoBehaviour {
     [FormerlySerializedAs("toggle")] [SerializeField]
     private Toggle toggleCollectServer;
     
-    private void Start()
-    {
-        toggleCollectServer.isOn = GeeklabSDK.GetIsMetricsCollection();
-    }
     
     public void SetPurchase()
     { 
@@ -44,27 +41,27 @@ public class GeeklabSDK_TestClass : MonoBehaviour {
     
     
     
-    public void SendPurchaseMetrics()
+    public async void SendPurchaseMetrics()
     {
         var postData = new List<object>
         {
             new { id = "item1", price = 10 },
             new { id = "item2", price = 20 },
         };
-        GeeklabSDK.SendCustomPurchaseMetrics(postData);
+        await GeeklabSDK.SendCustomPurchaseMetrics(postData);
     }
     
-    public void SendAdMetrics()
+    public async void SendAdMetrics()
     { 
         var postData = new List<object>
         {
             new { id = "Test", status = "Showed" },
         };
-        GeeklabSDK.SendCustomAdMetrics(postData);
+        await GeeklabSDK.SendCustomAdMetrics(postData);
     }
     
-    public void SendDeviceInformation()
+    public async void SendDeviceInformation()
     { 
-        GeeklabSDK.SendUserMetrics();
+        await GeeklabSDK.SendUserMetrics();
     }
 }

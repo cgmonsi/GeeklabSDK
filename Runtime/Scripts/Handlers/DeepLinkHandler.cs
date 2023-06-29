@@ -1,5 +1,6 @@
 using UnityEngine;
-
+using System;
+using System.Runtime.InteropServices;
 
 namespace Kitrum.GeeklabSDK
 {
@@ -25,9 +26,9 @@ namespace Kitrum.GeeklabSDK
                 TokenHandler.SetToken(creativeToken);
             }
 
-            return creativeToken;
+            return deepLink;
         }
-
+    
         private static string ParseDeepLink(string deepLink)
         {
             var regex = new System.Text.RegularExpressions.Regex(@"[=\/\\]([^=\/\\]*)$");

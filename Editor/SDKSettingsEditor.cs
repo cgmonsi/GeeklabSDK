@@ -1,7 +1,10 @@
 using System;
+using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 using UnityEngine.Networking;
 using UnityEngine.Purchasing;
 
@@ -22,6 +25,7 @@ namespace Kitrum.GeeklabSDK
         public static void ShowWindow()
         {
             GetWindow<SDKSettingsEditor>("SDK Settings").minSize = minWindowSize;
+            ManifestModifier();
         }
 
         private void OnEnable()
@@ -39,20 +43,27 @@ namespace Kitrum.GeeklabSDK
             return;
 #endif
                 
-                if (PlayerPrefs.HasKey("SDKToken"))
+                if (!string.IsNullOrEmpty(SDKSettingsModel.Instance.Token))
                 {
-                    sdkSettings.Token = PlayerPrefs.GetString("SDKToken");
+                    sdkSettings.Token = SDKSettingsModel.Instance.Token;
                     SDKTokenModel.Instance.Token = sdkSettings.Token;
                     SDKTokenModel.Instance.IsTokenVerified = !string.IsNullOrEmpty(sdkSettings.Token);
                 }
             }
-
-            var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-            sdkSettings = AssetDatabase.LoadAssetAtPath<SDKSettingsModel>(path);
-            if (sdkSettings != null && sdkSettings.Token != null)
+            
+            if (guids.Length > 0)
             {
-                tokenInputField = sdkSettings.Token;
-                SDKTokenModel.Instance.IsTokenVerified = !string.IsNullOrEmpty(sdkSettings.Token);
+                var path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                sdkSettings = AssetDatabase.LoadAssetAtPath<SDKSettingsModel>(path);
+                if (sdkSettings != null && sdkSettings.Token != null)
+                {
+                    tokenInputField = sdkSettings.Token;
+                    SDKTokenModel.Instance.IsTokenVerified = !string.IsNullOrEmpty(sdkSettings.Token);
+                }
+            }
+            else
+            {
+                Debug.LogError("GUIDs array is empty.");
             }
 
             missingValues = false;
@@ -63,6 +74,39 @@ namespace Kitrum.GeeklabSDK
         {
             SaveSDKSettingsModel();
         }
+        
+        
+        private static void ManifestModifier()
+        {
+            var manifestPath = Path.Combine(Application.dataPath, "..", "Packages", "manifest.json");
+
+            if (!File.Exists(manifestPath))
+            {
+                Debug.LogError("Could not find manifest.json");
+                return;
+            }
+
+            var manifestContent = File.ReadAllText(manifestPath);
+            var manifestJson = JObject.Parse(manifestContent);
+
+            // Check if "testables" property exists, if not create it
+            if (manifestJson["testables"] == null)
+            {
+                manifestJson["testables"] = new JArray();
+            }
+
+            // Add packages to "testables" property
+            var testables = (JArray)manifestJson["testables"];
+            if (!testables.Any(t => t.Value<string>() == "com.kitrum.geeklab-sdk"))
+            {
+                testables.Add("com.kitrum.geeklab-sdk");
+
+                // Write modified content back to manifest.json
+                File.WriteAllText(manifestPath, manifestJson.ToString());
+                Debug.Log("manifest.json was modified");
+            }
+        }
+
         
 
         private void OnGUI()
@@ -97,8 +141,9 @@ namespace Kitrum.GeeklabSDK
                     tokenInputField = "";
                     SDKTokenModel.Instance.IsTokenVerified = false;
                     SDKTokenModel.Instance.Token = "";
-                    PlayerPrefs.DeleteKey("SDKToken");
-                    PlayerPrefs.Save();
+                    SDKSettingsModel.Instance.Token = "";
+                    // PlayerPrefs.DeleteKey("SDKToken");
+                    // PlayerPrefs.Save();
                     SaveSDKSettingsModel();
                     Repaint();
                     GUI.FocusControl(null);
@@ -112,7 +157,7 @@ namespace Kitrum.GeeklabSDK
 
                 EditorGUILayout.Separator(); // separator line
 
-                var isSDKDisabled = !sdkSettings.IsSDKEnabled || !sdkSettings.EnablePurchaseAnalytics; // New bool variable
+                var isSDKDisabled = sdkSettings != null && (!sdkSettings.IsSDKEnabled || !sdkSettings.EnablePurchaseAnalytics);
 
                 EditorGUI.BeginDisabledGroup(
                     isSDKDisabled); // Disable all controls within this group if isSDKDisabled == true
@@ -159,8 +204,9 @@ namespace Kitrum.GeeklabSDK
                 SDKTokenModel.Instance.Token = tokenInputField;
                 sdkSettings.Token = tokenInputField;
                 SaveSDKSettingsModel();
-                PlayerPrefs.SetString("SDKToken", tokenInputField);
-                PlayerPrefs.Save();
+                SDKSettingsModel.Instance.Token = tokenInputField;
+                // PlayerPrefs.SetString("SDKToken", tokenInputField);
+                // PlayerPrefs.Save();
             }
 
             isRequestInProgress = false; // Indicate that the request has finished
@@ -170,8 +216,13 @@ namespace Kitrum.GeeklabSDK
 
         private void DrawSDKSettingsModel()
         {
-            var sdkSettingsModelFields =
-                typeof(SDKSettingsModel).GetFields(BindingFlags.Public | BindingFlags.Instance);
+            if (sdkSettings == null)
+            {
+                Debug.LogError("sdkSettings is null");
+                return;
+            }
+            
+            var sdkSettingsModelFields = typeof(SDKSettingsModel).GetFields(BindingFlags.Public | BindingFlags.Instance);
             string currentGroup = null;
             foreach (var field in sdkSettingsModelFields)
             {
@@ -244,8 +295,15 @@ namespace Kitrum.GeeklabSDK
 
         private void SaveSDKSettingsModel()
         {
-            EditorUtility.SetDirty(sdkSettings);
-            AssetDatabase.SaveAssets();
+            if (sdkSettings != null)
+            {
+                EditorUtility.SetDirty(sdkSettings);
+                AssetDatabase.SaveAssets();
+            }
+            else
+            {
+                Debug.LogError("sdkSettings is null.");
+            }
         }
     }
 }

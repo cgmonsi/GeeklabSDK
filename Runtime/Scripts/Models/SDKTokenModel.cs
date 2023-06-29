@@ -24,11 +24,5 @@ namespace Kitrum.GeeklabSDK
         
         // SDK token
         public string Token { get; set; }
-
-        
-        public string GetToken()
-        {
-            return !PlayerPrefs.HasKey("SDKToken") ? null : PlayerPrefs.GetString("SDKToken");
-        }
     }
 }

@@ -1,10 +1,34 @@
 using UnityEngine;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Kitrum.GeeklabSDK
 {
     public class ClipboardHandler : MonoBehaviour
     {
-#if UNITY_EDITOR
+#if UNITY_IOS
+
+    public static string ReadClipboard()
+    {
+        return ClipboardManager.GetText();
+    }
+
+#elif UNITY_ANDROID
+    public static void WriteToClipboard(string str)
+    {
+        // AndroidJavaClass ClipboardClass = new AndroidJavaClass("android.content.ClipboardManager");
+        // AndroidJavaObject clipboardInstance = ClipboardClass.CallStatic<AndroidJavaObject>("getInstance", Context);
+        // clipboardInstance.Call("setText", str);
+    }
+
+    public static string ReadClipboard()
+    {
+        // AndroidJavaClass ClipboardClass = new AndroidJavaClass("android.content.ClipboardManager");
+        // AndroidJavaObject clipboardInstance = ClipboardClass.CallStatic<AndroidJavaObject>("getInstance", Context);
+        // return clipboardInstance.Call<string>("getText");
+        return "";
+    }
+#else
         public static void WriteToClipboard(string str)
         {
             var te = new TextEditor
@@ -22,37 +46,6 @@ namespace Kitrum.GeeklabSDK
             return te.text.Trim();
         }
 
-#elif UNITY_IOS
-    [DllImport("__Internal")]
-    private static extern void _WriteToClipboard(string str);
-
-    [DllImport("__Internal")]
-    private static extern string _ReadFromClipboard();
-
-    public void WriteToClipboard(string str)
-    {
-        _WriteToClipboard(str);
-    }
-
-    public string ReadClipboard()
-    {
-        return _ReadFromClipboard();
-    }
-#elif UNITY_ANDROID
-    public static void WriteToClipboard(string str)
-    {
-        // AndroidJavaClass ClipboardClass = new AndroidJavaClass("android.content.ClipboardManager");
-        // AndroidJavaObject clipboardInstance = ClipboardClass.CallStatic<AndroidJavaObject>("getInstance", Context);
-        // clipboardInstance.Call("setText", str);
-    }
-
-    public static string ReadClipboard()
-    {
-        // AndroidJavaClass ClipboardClass = new AndroidJavaClass("android.content.ClipboardManager");
-        // AndroidJavaObject clipboardInstance = ClipboardClass.CallStatic<AndroidJavaObject>("getInstance", Context);
-        // return clipboardInstance.Call<string>("getText");
-        return "";
-    }
 #endif
     }
 }
