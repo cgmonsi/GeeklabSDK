@@ -12,7 +12,7 @@ namespace Kitrum.GeeklabSDK
 {
     [RequireComponent(typeof(AdMetrics))]
     public class AdMetrics : MonoBehaviour
-#if UNITY_2020_1_OR_NEWER
+#if UNITY_ADD_NEW
         , IUnityAdsLoadListener, IUnityAdsInitializationListener, IUnityAdsShowListener
 #else
         , IUnityAdsListener
@@ -66,7 +66,7 @@ namespace Kitrum.GeeklabSDK
             if (!SDKSettingsModel.Instance.EnableAdAnalytics)
                 return;
 
-#if UNITY_2020_1_OR_NEWER
+#if UNITY_ADD_NEW
 #else
             Advertisement.AddListener(this);
 #endif
@@ -77,14 +77,14 @@ namespace Kitrum.GeeklabSDK
             gameId = SDKSettingsModel.Instance.GameIdAndroid;
             platform = "Android";
 #elif UNITY_IOS
-        Advertisement.Initialize(SDKSettingsModel.Instance.GameIdIOS, SDKSettingsModel.Instance.AdTestMode);
-        gameId = SDKSettingsModel.Instance.GameIdIOS;
-        platform = "iOS";
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdIOS, SDKSettingsModel.Instance.AdTestMode);
+            gameId = SDKSettingsModel.Instance.GameIdIOS;
+            platform = "iOS";
 #else
-        Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode, this);
-        gameId = SDKSettingsModel.Instance.GameIdAndroid;
-        Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Unsupported platform to AD");
-        platform = "Android";
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode, this);
+            gameId = SDKSettingsModel.Instance.GameIdAndroid;
+            Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Unsupported platform to AD");
+            platform = "Android";
 #endif
 
             var eventSystems = FindObjectsOfType<EventSystem>();
@@ -97,7 +97,7 @@ namespace Kitrum.GeeklabSDK
 
         private IEnumerator WaitForAdInitialization()
         {
-#if UNITY_2020_1_OR_NEWER
+#if UNITY_ADD_NEW
             while (!Advertisement.isInitialized)
             {
                 yield return waitForSeconds;
@@ -208,7 +208,7 @@ namespace Kitrum.GeeklabSDK
         }
 
         
-#if UNITY_2020_1_OR_NEWER
+#if UNITY_ADD_NEW
         public void OnUnityAdsAdLoaded(string placementId)
         {
             OnUnityAdsReady(placementId);

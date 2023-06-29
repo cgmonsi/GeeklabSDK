@@ -3,20 +3,24 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using Unity.Services.Core;
+using Unity.Services.Core.Environments;
 
 namespace Kitrum.GeeklabSDK
 {
     public delegate void OnPurchaseMade(string productId);
 
     public class PurchaseMetrics : MonoBehaviour
-#if UNITY_2020_1_OR_NEWER
-        , IStoreListener, IStoreController
+#if UNITY_PURCHASING_NEW
+        , IStoreListener
 #else
         , IStoreListener
 #endif
 
     {
         public static event OnPurchaseMade PurchaseMadeEvent;
+        
+        const string environment  = "production";
 
         public static PurchaseMetrics Instance;
         // public static PurchaseMetrics Instance
@@ -43,7 +47,7 @@ namespace Kitrum.GeeklabSDK
         public bool? IsUnityPurchaseReady { get; set; }
 
 
-        private void Awake()
+        private async void Awake()
         {
             if (Instance == null)
             {
@@ -55,10 +59,49 @@ namespace Kitrum.GeeklabSDK
                 Destroy(gameObject);
             }
             
+#if UNITY_PURCHASING_NEW
+            try {
+                var options = new InitializationOptions()
+                    .SetEnvironmentName(environment);
+
+                await UnityServices.InitializeAsync(options);
+            }
+            catch (Exception exception) {
+                // An error occurred during initialization
+            }
+            // Initialize(OnSuccess, OnError);
+#else
             InitializePurchasing();
+#endif
         }
 
+        
+        void OnSuccess()
+        {
+            var text = "Congratulations!\nUnity Gaming Services has been successfully initialized.";
+            Debug.Log(text);
+        }
 
+        void OnError(string message)
+        {
+            var text = $"Unity Gaming Services failed to initialize with error: {message}.";
+            Debug.LogError(text);
+        }
+        
+        
+        void Initialize(Action onSuccess, Action<string> onError)
+        {
+            try
+            {
+                var options = new InitializationOptions().SetEnvironmentName(environment );
+                UnityServices.InitializeAsync(options).ContinueWith(task => onSuccess());
+            }
+            catch (Exception exception)
+            {
+                onError(exception.Message);
+            }
+        }
+        
         private static void InitializePurchasing()
         {
             if (IsInitialized())
@@ -141,9 +184,10 @@ namespace Kitrum.GeeklabSDK
 #pragma warning restore CS4014
         }
 
+        
         public void OnInitializeFailed(InitializationFailureReason error, string message)
         {
-            throw new NotImplementedException();
+            OnInitializeFailed(error);
         }
 
 
@@ -198,7 +242,6 @@ namespace Kitrum.GeeklabSDK
             {
                 Debug.LogWarning(
                     $"{SDKSettingsModel.GetColorPrefixLog()} BuyProduct: FAIL. {productId} - Not initialized");
-
             }
         }
 
@@ -224,44 +267,5 @@ namespace Kitrum.GeeklabSDK
             
             return await taskCompletionSource.Task;
         }
-
-        
-#if UNITY_2020_1_OR_NEWER
-        public ProductCollection products { get; }
-        public void InitiatePurchase(Product product, string payload)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void InitiatePurchase(string productId, string payload)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void InitiatePurchase(Product product)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void InitiatePurchase(string productId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback, Action<InitializationFailureReason> failCallback)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback, Action<InitializationFailureReason, string> failCallback)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ConfirmPendingPurchase(Product product)
-        {
-            throw new NotImplementedException();
-        }
-#endif
     }
 }

@@ -6,7 +6,10 @@
         "UnityEngine.Purchasing",
         "UnityEditor.Purchasing",
         "UnityEngine.Advertisements",
-        "UnityEngine.Purchasing.Stores"
+        "UnityEngine.Purchasing.Stores",
+        "Unity.Services.Core",
+        "Unity.Services.Core.Analytics",
+        "Unity.Services.Core.Environments"
     ],
     "includePlatforms": [
         "Android",
@@ -21,6 +24,17 @@
     ],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.ads",
+            "expression": "4.0.0",
+            "define": "UNITY_ADD_NEW"
+        },
+        {
+            "name": "com.unity.purchasing",
+            "expression": "4.5.0",
+            "define": "UNITY_PURCHASING_NEW"
+        }
+    ],
     "noEngineReferences": false
 }
