@@ -6,10 +6,7 @@
         "UnityEngine.Purchasing",
         "UnityEditor.Purchasing",
         "UnityEngine.Advertisements",
-        "UnityEngine.Purchasing.Stores",
-        "Unity.Services.Core",
-        "Unity.Services.Core.Analytics",
-        "Unity.Services.Core.Environments"
+        "UnityEngine.Purchasing.Stores"
     ],
     "includePlatforms": [
         "Android",

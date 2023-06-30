@@ -3,25 +3,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Purchasing;
-using Unity.Services.Core;
-using Unity.Services.Core.Environments;
 
 namespace Kitrum.GeeklabSDK
 {
     public delegate void OnPurchaseMade(string productId);
 
-    public class PurchaseMetrics : MonoBehaviour
-#if UNITY_PURCHASING_NEW
-        , IStoreListener
-#else
-        , IStoreListener
-#endif
-
+    public class PurchaseMetrics : MonoBehaviour, IStoreListener
     {
         public static event OnPurchaseMade PurchaseMadeEvent;
         
-        const string environment  = "production";
-
         public static PurchaseMetrics Instance;
         // public static PurchaseMetrics Instance
         // {
@@ -47,7 +37,7 @@ namespace Kitrum.GeeklabSDK
         public bool? IsUnityPurchaseReady { get; set; }
 
 
-        private async void Awake()
+        private void Awake()
         {
             if (Instance == null)
             {
@@ -59,48 +49,9 @@ namespace Kitrum.GeeklabSDK
                 Destroy(gameObject);
             }
             
-#if UNITY_PURCHASING_NEW
-            try {
-                var options = new InitializationOptions()
-                    .SetEnvironmentName(environment);
-
-                await UnityServices.InitializeAsync(options);
-            }
-            catch (Exception exception) {
-                // An error occurred during initialization
-            }
-            // Initialize(OnSuccess, OnError);
-#else
             InitializePurchasing();
-#endif
         }
 
-        
-        void OnSuccess()
-        {
-            var text = "Congratulations!\nUnity Gaming Services has been successfully initialized.";
-            Debug.Log(text);
-        }
-
-        void OnError(string message)
-        {
-            var text = $"Unity Gaming Services failed to initialize with error: {message}.";
-            Debug.LogError(text);
-        }
-        
-        
-        void Initialize(Action onSuccess, Action<string> onError)
-        {
-            try
-            {
-                var options = new InitializationOptions().SetEnvironmentName(environment );
-                UnityServices.InitializeAsync(options).ContinueWith(task => onSuccess());
-            }
-            catch (Exception exception)
-            {
-                onError(exception.Message);
-            }
-        }
         
         private static void InitializePurchasing()
         {
