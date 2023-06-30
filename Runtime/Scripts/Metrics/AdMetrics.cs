@@ -67,7 +67,22 @@ namespace Kitrum.GeeklabSDK
                 return;
 
 #if UNITY_ADD_NEW
+    #if UNITY_ANDROID
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode, this);
+    #elif UNITY_IOS
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdIOS, SDKSettingsModel.Instance.AdTestMode);
+    #else
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode, this);
+    #endif
 #else
+    #if UNITY_ANDROID
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode);
+    #elif UNITY_IOS
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdIOS, SDKSettingsModel.Instance.AdTestMode);
+    #else
+            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode);
+    #endif
+            
             Advertisement.AddListener(this);
 #endif
             
