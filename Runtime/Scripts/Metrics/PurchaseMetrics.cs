@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Purchasing;
+#if UNITY_PURCHASING_NEW
+using Unity.Services.Core;
+#endif
+
 
 namespace Kitrum.GeeklabSDK
 {
@@ -52,13 +56,30 @@ namespace Kitrum.GeeklabSDK
             InitializePurchasing();
         }
 
+#if UNITY_PURCHASING_NEW
+        private async Task InitializeUnityServices()
+        {
+            try
+            {
+                await UnityServices.InitializeAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"Failed to initialize Unity Services: {e.Message}");
+            }
+        }
+#endif
+
         
-        private static void InitializePurchasing()
+#if UNITY_PURCHASING_NEW
+        private static async void InitializePurchasing()
         {
             if (IsInitialized())
             {
                 return;
             }
+
+            await Instance.InitializeUnityServices();
 
             var purchasableItems = new Dictionary<string, ProductType> { };
             foreach (var purchasableItem in SDKSettingsModel.Instance.purchasableItems)
@@ -77,7 +98,34 @@ namespace Kitrum.GeeklabSDK
 #pragma warning restore CS0618
         }
 
+#else
+        
+        private static void InitializePurchasing()
+        {
+            if (IsInitialized())
+            {
+                return;
+            }
+            
+            var purchasableItems = new Dictionary<string, ProductType> { };
+            foreach (var purchasableItem in SDKSettingsModel.Instance.purchasableItems)
+            {
+                purchasableItems.Add(purchasableItem.name, purchasableItem.type);
+            }
 
+            var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
+            foreach (var item in purchasableItems)
+            {
+                builder.AddProduct(item.Key, item.Value);
+            }
+
+#pragma warning disable CS0618
+            UnityPurchasing.Initialize(Instance, builder);
+#pragma warning restore CS0618
+        }
+#endif
+
+            
         private static bool IsInitialized()
         {
             if (SDKSettingsModel.Instance.EnablePurchaseAnalytics)
@@ -162,7 +210,7 @@ namespace Kitrum.GeeklabSDK
         }
 
 
-        public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
+        public void OnPurchaseFailed(UnityEngine.Purchasing.Product product, UnityEngine.Purchasing.PurchaseFailureReason failureReason)
         {
             Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Purchase failed: {failureReason}");
         }

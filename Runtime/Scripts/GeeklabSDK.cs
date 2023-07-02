@@ -17,6 +17,9 @@ public class GeeklabSDK : MonoBehaviour
                 return instance;
             }
 
+            if (!SDKSettingsModel.Instance.IsSDKEnabled || string.IsNullOrEmpty(SDKSettingsModel.Instance.Token))
+                return null;
+            
             var gameObject = new GameObject("GeeklabSDK");
             instance = gameObject.AddComponent<GeeklabSDK>();
             DontDestroyOnLoad(gameObject);
@@ -27,14 +30,14 @@ public class GeeklabSDK : MonoBehaviour
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void OnAfterSceneLoadRuntimeMethod() 
         {
-            if (SDKSettingsModel.Instance.IsSDKEnabled)
+            if (SDKSettingsModel.Instance.IsSDKEnabled && !string.IsNullOrEmpty(SDKSettingsModel.Instance.Token))
                 Initialize();
         }
         
         
         private void Awake()
         {
-            if (SDKSettingsModel.Instance.ShowDebugLog)
+            if (SDKSettingsModel.Instance != null && SDKSettingsModel.Instance.ShowDebugLog)
                 Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} SDK Initialized!");
             
             //------Init All Managers and hide them------//
@@ -52,7 +55,8 @@ public class GeeklabSDK : MonoBehaviour
             if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.EnableAdAnalytics))
                 return;
             
-            AdMetrics.Instance.ShowAd();
+            if (AdMetrics.Instance != null)
+                AdMetrics.Instance.ShowAd();
         }
         
         /// <summary>
@@ -61,10 +65,19 @@ public class GeeklabSDK : MonoBehaviour
         /// <param name="value">Product ID</param>
         public static void BuyProduct(string value)
         { 
-            if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.EnablePurchaseAnalytics))
+            if (SDKSettingsModel.Instance == null || !IsConfigFullyEnabled(SDKSettingsModel.Instance.EnablePurchaseAnalytics))
                 return;
             
             PurchaseMetrics.BuyProduct(value);
+        }
+        
+        /// <summary>
+        /// Get Creative Token if any.
+        /// </summary>
+        /// <returns>Creative Token</returns>
+        public static string GetCreativeToken() 
+        {
+            return TokenHandler.GetCreativeToken();
         }
         
         /// <summary>
@@ -82,7 +95,7 @@ public class GeeklabSDK : MonoBehaviour
         /// <returns>Clipboard content</returns>
         public static string GetClipboard()
         { 
-            return ClipboardHandler.ReadClipboard();
+            return ClipboardHandler.GetText();
         }
         
         /// <summary>
@@ -91,7 +104,8 @@ public class GeeklabSDK : MonoBehaviour
         /// <param name="isEnabled">A flag indicating whether to enable metrics collection</param>
         public static void ToggleMetricsCollection(bool isEnabled)
         {
-            SDKSettingsModel.Instance.SendStatistics = isEnabled;
+            if (SDKSettingsModel.Instance != null)
+                SDKSettingsModel.Instance.SendStatistics = isEnabled;
         }
         
         /// <summary>
@@ -100,15 +114,18 @@ public class GeeklabSDK : MonoBehaviour
         /// <returns>True if metrics collection is enabled, false otherwise</returns>
         public static bool GetIsMetricsCollection()
         {
-            return SDKSettingsModel.Instance.SendStatistics;
+            if (SDKSettingsModel.Instance != null)
+                return SDKSettingsModel.Instance.SendStatistics;
+            else
+                return false;
         }
 
         /// <summary>
         /// Send device information to the server.
         /// </summary>
         public static async Task<bool?> SendUserMetrics()
-        { 
-            if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
+        {
+            if (SDKSettingsModel.Instance == null || !IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
                 return false;
             
             return await DeviceInfoHandler.SendDeviceInfo();
@@ -120,7 +137,7 @@ public class GeeklabSDK : MonoBehaviour
         /// <param name="data">Purchase data. Can be a string, list, or dictionary.</param>
         public static async Task<bool?> SendCustomPurchaseMetrics(object data)
         {
-            if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
+            if (SDKSettingsModel.Instance == null || !IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
                 return false;
 
             var postData = JsonConverter.ConvertToJson(data);
@@ -133,7 +150,7 @@ public class GeeklabSDK : MonoBehaviour
         /// <param name="postData">Advertisement data to be sent. Can be a string, list, or dictionary.</param>
         public static async Task<bool?> SendCustomAdMetrics(object data)
         {
-            if (!IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
+            if (SDKSettingsModel.Instance == null || !IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
                 return false;
 
             var postData = JsonConverter.ConvertToJson(data);
@@ -144,7 +161,8 @@ public class GeeklabSDK : MonoBehaviour
         
         private static bool IsConfigFullyEnabled(bool value)
         { 
-            if (SDKSettingsModel.Instance.IsSDKEnabled)
+            if (SDKSettingsModel.Instance != null && SDKSettingsModel.Instance.IsSDKEnabled 
+                                                  && !string.IsNullOrEmpty(SDKSettingsModel.Instance.Token))
             {
                 if (value)
                 {

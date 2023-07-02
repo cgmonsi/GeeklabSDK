@@ -6,7 +6,9 @@
         "UnityEngine.Purchasing",
         "UnityEditor.Purchasing",
         "UnityEngine.Advertisements",
-        "UnityEngine.Purchasing.Stores"
+        "UnityEngine.Purchasing.Stores",
+        "UnityEngine.Monetization",
+        "Unity.Services.Core"
     ],
     "includePlatforms": [
         "Android",
@@ -29,7 +31,7 @@
         },
         {
             "name": "com.unity.purchasing",
-            "expression": "4.5.0",
+            "expression": "4.4.1",
             "define": "UNITY_PURCHASING_NEW"
         }
     ],

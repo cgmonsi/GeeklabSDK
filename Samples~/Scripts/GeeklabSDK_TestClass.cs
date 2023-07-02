@@ -2,12 +2,19 @@ using System.Collections.Generic;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using UnityEngine;
-using Kitrum.GeeklabSDK;
+using TMPro;
 
 
 public class GeeklabSDK_TestClass : MonoBehaviour {
     [FormerlySerializedAs("toggle")] [SerializeField]
     private Toggle toggleCollectServer;
+    
+    [SerializeField]
+    private TextMeshProUGUI Clipboard_TextMeshPro;
+    [SerializeField]
+    private TextMeshProUGUI DeepLink_TextMeshPro;
+    [SerializeField]
+    private TextMeshProUGUI CreativeToken_TextMeshPro;
     
     
     public void SetPurchase()
@@ -22,14 +29,26 @@ public class GeeklabSDK_TestClass : MonoBehaviour {
     }
 
     
+    public void GetCreativeToken()
+    {
+        if (CreativeToken_TextMeshPro != null)
+            CreativeToken_TextMeshPro.SetText(GeeklabSDK.GetCreativeToken());
+        Debug.Log(GeeklabSDK.GetCreativeToken());
+    }
+    
+    
     public void GetDeepLink()
     {
+        if (DeepLink_TextMeshPro != null)
+            DeepLink_TextMeshPro.SetText(GeeklabSDK.GetDeepLink());
         Debug.Log(GeeklabSDK.GetDeepLink());
     }
     
     
     public void ShowUserClipboard()
     { 
+        if (Clipboard_TextMeshPro != null)
+            Clipboard_TextMeshPro.SetText(GeeklabSDK.GetClipboard());
         Debug.Log(GeeklabSDK.GetClipboard());
     }
     

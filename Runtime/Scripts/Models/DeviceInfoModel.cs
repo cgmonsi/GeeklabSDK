@@ -20,5 +20,7 @@ namespace Kitrum.GeeklabSDK
         public string GraphicsDeviceVersion;
         public string SessionStartTime;
         public int SessionDurationInSeconds;
+        public string Resolutions;
+        public string InstalledFonts;
     }
 }

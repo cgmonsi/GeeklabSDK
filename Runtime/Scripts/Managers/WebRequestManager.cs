@@ -67,7 +67,7 @@ namespace Kitrum.GeeklabSDK
 
             SendWebhookRequest(type, data, onSuccess, onError);
         }
-        
+
 
         public void SendPurchaseMetricsRequest(string data, bool isCustom, Action<string> onSuccess = null, Action<string> onError = null)
         {
@@ -77,34 +77,42 @@ namespace Kitrum.GeeklabSDK
             SendWebhookRequest(type, data, onSuccess, onError);
         }
         
-
         
-        public void GetTokenRequest(Action<string> onSuccess, Action<string> onError = null)
+        public void VerifyCreativeTokenRequest(string token, Action<string> onSuccess = null, Action<string> onError = null)
         {
-            SendRequest(ApiEndpointsModel.GET_TOKEN, "", onSuccess, onError, UnityWebRequest.kHttpVerbGET);
-        }
-
-        public void SetTokenRequest(string json, Action<string> onSuccess, Action<string> onError = null)
-        {
-            SendRequest(ApiEndpointsModel.SEND_TOKEN + json, "", onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
-        }
-        
-        public void SendTokenRequest(string json, Action<string> onSuccess, Action<string> onError = null)
-        {
-            SendRequest(ApiEndpointsModel.SEND_TOKEN, json, onSuccess, onError, UnityWebRequest.kHttpVerbGET);
-        }
-        
-        public void VerifyAPIKeyRequest(Dictionary<string, string> headerData = null, Action<string> onSuccess = null, Action<string> onError = null)
-        {
-            if (headerData == null) 
+            var postData = new
             {
-                headerData = new Dictionary<string, string>
-                {
-                    { "bearerAuth", ApiEndpointsModel.TEST_TOKEN }
-                };
-            }
+                token = token,
+            };
+            Debug.Log(postData);
+            var json = JsonConvert.SerializeObject(postData);
+            SendRequest(ApiEndpointsModel.VERIFY_TOKEN, json, onSuccess, onError);
+        }
+        
 
-            SendRequest(ApiEndpointsModel.VERIFY_API_KEY, "", onSuccess, onError, UnityWebRequest.kHttpVerbPOST, headerData);
+        public void FetchTokenRequest(Action<string> onSuccess, Action<string> onError = null)
+        {
+            var deviceInfo = DeviceInfoHandler.GetDeviceInfo();
+            var postData = new
+            {
+                dpi = (int)deviceInfo.Dpi,
+                width = deviceInfo.Width,
+                height = deviceInfo.Height,
+                lowPower = deviceInfo.LowPower,
+                timezone = deviceInfo.Timezone,
+                iosSystem = deviceInfo.IosSystem,
+                deviceName = deviceInfo.DeviceName,
+                deviceType = deviceInfo.DeviceType,
+                generation = deviceInfo.Generation,
+                deviceModel = deviceInfo.DeviceModel,
+                resolutions = deviceInfo.Resolutions, //array
+                installedFonts = deviceInfo.InstalledFonts, //array
+                graphicsDeviceID = deviceInfo.GraphicsDeviceID,
+                graphicsDeviceVendor = deviceInfo.GraphicsDeviceVendor,
+                graphicsDeviceVersion = deviceInfo.GraphicsDeviceVersion,
+            };
+            var json = JsonConvert.SerializeObject(postData);
+            SendRequest(ApiEndpointsModel.FETCH_TOKEN, json, onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
         }
 
         
@@ -169,7 +177,7 @@ namespace Kitrum.GeeklabSDK
                 }
 
                 yield return www.SendWebRequest();
-
+                
 #pragma warning disable CS0618
                 if (www.isNetworkError || www.isHttpError)
 #pragma warning restore CS0618
@@ -182,11 +190,14 @@ namespace Kitrum.GeeklabSDK
                         case 401:
                             DebugLogError("API key is not valid.", onError);
                             break;
+                        case 404:
+                            DebugLogError($"{www.error}\n{www.downloadHandler.text}", onError);
+                            break;
                         case 500:
                             DebugLogError("Server error.\n" + www.downloadHandler.text + "\n", onError);
                             break;
                         default:
-                            DebugLogError($"Error: {www.error}", onError);
+                            DebugLogError($"Error: {www.error}\n" + www.downloadHandler.text + "\n", onError);
                             break;
                     }
                 }

@@ -88,15 +88,12 @@ namespace Kitrum.GeeklabSDK
             
 
 #if UNITY_ANDROID
-            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode, this);
             gameId = SDKSettingsModel.Instance.GameIdAndroid;
             platform = "Android";
 #elif UNITY_IOS
-            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdIOS, SDKSettingsModel.Instance.AdTestMode);
             gameId = SDKSettingsModel.Instance.GameIdIOS;
             platform = "iOS";
 #else
-            Advertisement.Initialize(SDKSettingsModel.Instance.GameIdAndroid, SDKSettingsModel.Instance.AdTestMode, this);
             gameId = SDKSettingsModel.Instance.GameIdAndroid;
             Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Unsupported platform to AD");
             platform = "Android";
