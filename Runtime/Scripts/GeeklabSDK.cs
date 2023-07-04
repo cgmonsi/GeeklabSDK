@@ -121,14 +121,15 @@ public class GeeklabSDK : MonoBehaviour
         }
 
         /// <summary>
-        /// Send device information to the server.
+        /// Send User Metrics to the server.
         /// </summary>
-        public static async Task<bool?> SendUserMetrics()
+        public static async Task<bool?> SendUserMetrics(object data)
         {
             if (SDKSettingsModel.Instance == null || !IsConfigFullyEnabled(SDKSettingsModel.Instance.SendStatistics))
                 return false;
             
-            return await DeviceInfoHandler.SendDeviceInfo();
+            var postData = JsonConverter.ConvertToJson(data);
+            return await UserMetrics.SendMetrics(postData);
         }
         
         /// <summary>
@@ -154,7 +155,7 @@ public class GeeklabSDK : MonoBehaviour
                 return false;
 
             var postData = JsonConverter.ConvertToJson(data);
-            return await AdMetrics.SendMetrics(postData);
+            return await AdMetrics.SendMetrics(postData, true);
         }
 
 

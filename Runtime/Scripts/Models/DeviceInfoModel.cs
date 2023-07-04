@@ -15,12 +15,12 @@ namespace Kitrum.GeeklabSDK
         public string DeviceType;
         public string Generation;
         public string DeviceModel;
-        public int GraphicsDeviceID;
+        public string GraphicsDeviceID;
         public string GraphicsDeviceVendor;
         public string GraphicsDeviceVersion;
         public string SessionStartTime;
         public int SessionDurationInSeconds;
-        public string Resolutions;
-        public string InstalledFonts;
+        public string[] Resolutions;
+        public string[] InstalledFonts;
     }
 }

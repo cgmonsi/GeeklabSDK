@@ -150,7 +150,7 @@ namespace Kitrum.GeeklabSDK
                 new { adStatus = "error", message = message },
             };
             var postData = JsonConverter.ConvertToJson(data);
-            SendMetrics(postData, true);
+            SendMetrics(postData);
 #pragma warning restore CS4014
         }
 
@@ -184,7 +184,7 @@ namespace Kitrum.GeeklabSDK
                 new { adStatus, placementId, watchTime = startWatchTime },
             };
             var postData = JsonConverter.ConvertToJson(data);
-            SendMetrics(postData, true);
+            SendMetrics(postData);
 #pragma warning restore CS4014
         }
         

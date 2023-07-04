@@ -87,40 +87,20 @@ class IOSBoard : IBoard {
 #if UNITY_ANDROID
 class AndroidBoard : IBoard
 {
-    private AndroidJavaObject activity;
-
-    public AndroidBoard() 
+    public void SetText(string str)
     {
-        var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-        activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-    }
-    
-    
-   public void SetText(string str)
-    {
-        using (var clipData = new AndroidJavaObject("android.content.ClipData", new object[]{ str, str, new AndroidJavaObject("android.content.ClipData$Item", str)}))
+        using (var helperClass = new AndroidJavaClass("com.kitrum.plugin.ClipboardHelper"))
         {
-            GetClipboardManager().Call("setPrimaryClip", clipData);
+            helperClass.CallStatic("SetText", str);
         }
     }
 
     public string GetText()
     {
-        using (var clipData = GetClipboardManager().Call<AndroidJavaObject>("getPrimaryClip"))
+        using (var helperClass = new AndroidJavaClass("com.kitrum.plugin.ClipboardHelper"))
         {
-            if (clipData.Call<int>("getItemCount") > 0)
-            {
-                return clipData.Call<AndroidJavaObject>("getItemAt", 0).Call<string>("coerceToText", activity).ToString();
-            }
+            return helperClass.CallStatic<string>("GetText");
         }
-        return null;
-    }
-
-    AndroidJavaObject GetClipboardManager()
-    {
-        var staticContext = new AndroidJavaClass("android.content.Context");
-        var service = staticContext.GetStatic<string>("CLIPBOARD_SERVICE");
-        return activity.Call<AndroidJavaObject>("getSystemService", service);
     }
 }
 #endif

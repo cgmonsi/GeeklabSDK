@@ -11,18 +11,41 @@ namespace Kitrum.GeeklabSDK
     {
         private const string TOKEN_KEY = "GeeklabCreativeToken";
         private static string creativeToken = "";
+        private static string lastCheckedToken = "";
 
-        private async void Awake()
+        
+        private void Awake()
+        {
+            CheckToken();
+        }
+        
+        
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            CheckToken();
+        }
+        
+
+        private async void CheckToken()
         {
             var deepLink = DeepLinkHandler.CheckDeepLink();
+            if (deepLink == null) deepLink = "";
             var clipboard = ClipboardHandler.GetText();
+            if (clipboard == null) clipboard = "";
             var isVerifyCreativeToken = false;
+
+            if (!string.IsNullOrEmpty(GetCreativeToken()))
+                return;
 
             // If deep-link is present, read the creative token from it
             if (deepLink.Trim() != "")
             {
                 var token = GetTokenFromText(deepLink.Trim());
-                isVerifyCreativeToken = await VerifyCreativeToken(token);
+                if (!lastCheckedToken.Equals(token))
+                    isVerifyCreativeToken = await VerifyCreativeToken(token);
+
+                lastCheckedToken = token;
+                    
                 if (isVerifyCreativeToken)
                 {
                     SetToken(token);
@@ -31,8 +54,8 @@ namespace Kitrum.GeeklabSDK
                 }
                 else
                 {
-                    if (SDKSettingsModel.Instance.ShowDebugLog)
-                        Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} DeepLink Token: False");
+                    // if (SDKSettingsModel.Instance.ShowDebugLog)
+                    //     Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} DeepLink Token: False");
                 }
             }
 
@@ -40,7 +63,10 @@ namespace Kitrum.GeeklabSDK
             if (clipboard.Trim() != "")
             {
                 var token = GetTokenFromText(clipboard.Trim());
-                isVerifyCreativeToken = await VerifyCreativeToken(token);
+                if (!lastCheckedToken.Equals(token))
+                    isVerifyCreativeToken = await VerifyCreativeToken(token);
+
+                lastCheckedToken = token;
 
                 if (isVerifyCreativeToken)
                 {
@@ -50,26 +76,32 @@ namespace Kitrum.GeeklabSDK
                 }
                 else
                 {
-                    if (SDKSettingsModel.Instance.ShowDebugLog)
-                        Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Clipboard Token: False");
+                    // if (SDKSettingsModel.Instance.ShowDebugLog)
+                    //     Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Clipboard Token: False");
                 }
             }
 
             // If there is still no token, get one from Geeklab endpoint
             if (GetCreativeToken() == "")
             {
-                var token = GetTokenFromText (await GetTokenFromGeeklab());
-                isVerifyCreativeToken = ContainsToken(token);
+                var inputFromGeeklab = await GetTokenFromGeeklab();
+                var token = GetTokenFromText (inputFromGeeklab);
+
+                if (!lastCheckedToken.Equals(token))
+                    isVerifyCreativeToken = ContainsToken(token);
+                
+                lastCheckedToken = token;
+                
                 if (isVerifyCreativeToken)
                 {
                     SetToken(token);
                     if (SDKSettingsModel.Instance.ShowDebugLog)
-                        Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Token from Clipboard = {GetCreativeToken()} - {token}");
+                        Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} Token from Geeklab = {GetCreativeToken()}");
                 }
                 else
                 {
-                    if (SDKSettingsModel.Instance.ShowDebugLog)
-                        Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Geeklab Token: False");
+                    // if (SDKSettingsModel.Instance.ShowDebugLog)
+                    //     Debug.LogWarning($"{SDKSettingsModel.GetColorPrefixLog()} Geeklab Token: False");
                 }
             }
         }
@@ -78,29 +110,44 @@ namespace Kitrum.GeeklabSDK
         private static string GetTokenFromText(string input)
         {
             if (string.IsNullOrEmpty(input))
-                return null;
+                return "";
             
-            var pattern = @"\b(\w+-)+\w+\b";
-            var match = Regex.Match(input, pattern, RegexOptions.IgnoreCase);
+            var pattern = @"\[(\w+)\]|'(\w+)'|""(\w+)""|\((\w+)\)|\b(\w+)\b";
+            var match = Regex.Match(input, pattern);
 
-            if (match.Success)
-                return match.Value;
-            else
-                return null;
+            GroupCollection groups = match.Groups;
+
+            for (int i = 1; i <= 5; i++)
+            {
+                if (!String.IsNullOrEmpty(groups[i].Value))
+                {
+                    return match.Value.Trim('"');
+                }
+            }
+
+            return "";
         }
 
 
-        private static bool ContainsToken(string token)
+        private static bool ContainsToken(string input)
         {
-            if (string.IsNullOrEmpty(token))
+            if (string.IsNullOrEmpty(input))
                 return false;
 
-            var pattern =@"\b(\w+-)+\w+\b";
+            var pattern = @"\[(\w+)\]|'(\w+)'|""(\w+)""|\((\w+)\)|\b(\w+)\b";
+            var match = Regex.Match(input, pattern);
 
-            if (Regex.IsMatch(token, pattern, RegexOptions.IgnoreCase))
-                return true;
-            else
-                return false;
+            GroupCollection groups = match.Groups;
+
+            for (int i = 1; i <= 5; i++)
+            {
+                if (!String.IsNullOrEmpty(groups[i].Value))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
         }
 
 
@@ -112,7 +159,7 @@ namespace Kitrum.GeeklabSDK
 
         public static void SetToken(string newToken)
         {
-            creativeToken = newToken;
+            creativeToken = newToken.TrimStart('?');
             SaveTokenLocally();
         }
 
@@ -133,15 +180,13 @@ namespace Kitrum.GeeklabSDK
             WebRequestManager.Instance.VerifyCreativeTokenRequest(token,
                 (response) =>
                 {
-                    Debug.Log(response);
-
-                    if (SDKSettingsModel.Instance.ShowDebugLog)
-                        Debug.Log($"{response}");
+                    // if (SDKSettingsModel.Instance.ShowDebugLog)
+                    //     Debug.Log($"{response}");
                     taskCompletionSource.SetResult(true);
                 },
                 (error) =>
                 {
-                    Debug.LogError($"{error}");
+                    // Debug.LogWarning($"{error}");
                     taskCompletionSource.SetResult(false);
                 }
             );
@@ -160,15 +205,15 @@ namespace Kitrum.GeeklabSDK
             WebRequestManager.Instance.FetchTokenRequest(
                 (response) =>
                 {
-                    if (SDKSettingsModel.Instance.ShowDebugLog)
-                        Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} === {response}");
+                    // if (SDKSettingsModel.Instance.ShowDebugLog)
+                    //     Debug.Log($"{SDKSettingsModel.GetColorPrefixLog()} {response}");
                     var tokenResponse = JsonUtility.FromJson<TokenResponseModel>(response);
                     SetToken(tokenResponse.token);
                     taskCompletionSource.SetResult(tokenResponse.token);
                 },
                 (error) =>
                 {
-                    // Debug.LogError($"{error}");
+                    Debug.LogError($"{error}");
                     taskCompletionSource.SetResult(null);
                 }
             );

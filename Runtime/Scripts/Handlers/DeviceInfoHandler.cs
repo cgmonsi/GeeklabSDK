@@ -1,8 +1,10 @@
 using UnityEngine;
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 
 namespace Kitrum.GeeklabSDK
@@ -77,7 +79,7 @@ namespace Kitrum.GeeklabSDK
         {
             var deviceGeneration = deviceModel.GetDeviceModel();
             var installedFonts = deviceModel.GetInstalledFonts();
-
+            
             // var deviceGeneration = "";
             // var installedFonts = "";
 #if UNITY_IOS && !UNITY_TVOS
@@ -94,17 +96,26 @@ namespace Kitrum.GeeklabSDK
             }
 #endif
             
-            var resolutions = Screen.resolutions;
-            var resolutionList = new StringBuilder();
+            var installedFontsArray = installedFonts.Split(',');
+            var installedFontsJson = JsonConvert.SerializeObject(installedFontsArray);
+            
+            
+            var resolutionsStr = Screen.resolutions.Select(r => r.width + "x" + r.height).ToArray();
+            // var resolutions = JsonConvert.SerializeObject(resolutionsStr);
+            
+            var timeZone = DateTime.UtcNow.ToString("o");
 
-            foreach (Resolution res in resolutions)
-            {
-                resolutionList.Append(res.width + "x" + res.height + ", ");
-            }
+            // var resolutions = Screen.resolutions;
+            // var resolutionList = new StringBuilder();
 
-            // Remove the last comma and space
-            if (resolutionList.Length > 2)
-                resolutionList.Remove(resolutionList.Length - 2, 2);
+            // foreach (Resolution res in resolutions)
+            // {
+            //     resolutionList.Append(res.width + "x" + res.height + ", ");
+            // }
+
+            // // Remove the last comma and space
+            // if (resolutionList.Length > 2)
+            //     resolutionList.Remove(resolutionList.Length - 2, 2);
 
             var deviceInfo = new DeviceInfoModel
             {
@@ -112,15 +123,15 @@ namespace Kitrum.GeeklabSDK
                 Width = Screen.width,
                 Height = Screen.height,
                 LowPower = SystemInfo.batteryLevel < 0.2f,
-                Timezone = TimeZoneInfo.Local.StandardName,
+                Timezone = timeZone,
                 IosSystem = SystemInfo.operatingSystem,
                 DeviceName = SystemInfo.deviceName,
                 DeviceType = SystemInfo.deviceType.ToString(),
                 DeviceModel = SystemInfo.deviceModel,
-                Resolutions = resolutionList.ToString(),
-                InstalledFonts = installedFonts,
+                Resolutions = resolutionsStr,
+                InstalledFonts = installedFontsArray,
                 Generation = deviceGeneration,
-                GraphicsDeviceID = SystemInfo.graphicsDeviceID,
+                GraphicsDeviceID = SystemInfo.graphicsDeviceID.ToString(),
                 GraphicsDeviceVendor = SystemInfo.graphicsDeviceVendor,
                 GraphicsDeviceVersion = SystemInfo.graphicsDeviceVersion,
                 SessionStartTime = sessionStartTime.ToString(),

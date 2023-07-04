@@ -97,8 +97,12 @@ public class GeeklabSDK_WebRequestTests {
             yield return waitForSeconds;
             elapsedTime += 0.1f;
         }
-
-        var task = GeeklabSDK.SendUserMetrics();
+        
+        var postData = new List<object>
+        {
+            new { id = "test" },
+        };
+        var task = GeeklabSDK.SendUserMetrics(postData);
         yield return new WaitUntil(() => task.IsCompleted);
 
         var isSuccessPurchase = task.Result;

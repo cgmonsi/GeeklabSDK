@@ -84,7 +84,6 @@ namespace Kitrum.GeeklabSDK
             {
                 token = token,
             };
-            Debug.Log(postData);
             var json = JsonConvert.SerializeObject(postData);
             SendRequest(ApiEndpointsModel.VERIFY_TOKEN, json, onSuccess, onError);
         }
@@ -112,6 +111,7 @@ namespace Kitrum.GeeklabSDK
                 graphicsDeviceVersion = deviceInfo.GraphicsDeviceVersion,
             };
             var json = JsonConvert.SerializeObject(postData);
+
             SendRequest(ApiEndpointsModel.FETCH_TOKEN, json, onSuccess, onError, UnityWebRequest.kHttpVerbPOST);
         }
 
@@ -123,9 +123,9 @@ namespace Kitrum.GeeklabSDK
 
             var postData = new
             {
-                id = type,
                 type = type,
                 created = currentDateText,
+                creativeToken = TokenHandler.GetCreativeToken(),
                 data = data
             };
 
@@ -205,7 +205,8 @@ namespace Kitrum.GeeklabSDK
                 {
                     try
                     {
-                        onSuccess?.Invoke(www.downloadHandler.text + "\nData Request:" + json + "\n");
+                        // onSuccess?.Invoke(www.downloadHandler.text + "\nData Request:" + json + "\n");
+                        onSuccess?.Invoke(www.downloadHandler.text);
                     }
                     catch (WebException webEx)
                     {

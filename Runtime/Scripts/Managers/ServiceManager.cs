@@ -11,7 +11,7 @@ namespace Kitrum.GeeklabSDK
         public static ClipboardHandler ClipboardHandler { get; private set; }
         public static TokenHandler TokenHandler { get; private set; }
 
-        public static EngagementMetrics EngagementMetrics { get; private set; }
+        public static UserMetrics UserMetrics { get; private set; }
         public static PurchaseMetrics PurchaseMetrics { get; private set; }
         public static AdMetrics AdMetrics { get; private set; }
 
@@ -29,7 +29,7 @@ namespace Kitrum.GeeklabSDK
             DeepLinkHandler = gameObject.AddComponent<DeepLinkHandler>();
             DeviceInfoHandler = gameObject.AddComponent<DeviceInfoHandler>();
 
-            EngagementMetrics = gameObject.AddComponent<EngagementMetrics>();
+            UserMetrics = gameObject.AddComponent<UserMetrics>();
 
             if (SDKSettingsModel.Instance.EnablePurchaseAnalytics)
                 PurchaseMetrics = gameObject.AddComponent<PurchaseMetrics>();

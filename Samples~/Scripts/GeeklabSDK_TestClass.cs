@@ -79,8 +79,13 @@ public class GeeklabSDK_TestClass : MonoBehaviour {
         await GeeklabSDK.SendCustomAdMetrics(postData);
     }
     
-    public async void SendDeviceInformation()
+    public async void SendUserMetrics()
     { 
-        await GeeklabSDK.SendUserMetrics();
+        var postData = new List<object>
+        {
+            new { id = "Test", status = "Ok" },
+        };
+        
+        await GeeklabSDK.SendUserMetrics(postData);
     }
 }
