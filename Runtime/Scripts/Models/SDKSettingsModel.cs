@@ -48,18 +48,22 @@ namespace Kitrum.GeeklabSDK
 
         [FieldGroup("Main Settings")] [Header("Main Settings")]
         public bool IsSDKEnabled = false;
-
+        
         [DisableIfSDKDisabled] [FieldGroup("Main Settings")]
-        public bool EnableAdAnalytics = false;
-
-        [DisableIfSDKDisabled] [FieldGroup("Main Settings")]
-        public bool EnablePurchaseAnalytics = false;
+        public bool CheckClipboardForToken = true;
 
         [DisableIfSDKDisabled] [FieldGroup("Main Settings")]
         public bool SendStatistics = true;
 
         [DisableIfSDKDisabled] [FieldGroup("Main Settings")]
         public bool ShowDebugLog = true;
+        
+        
+        [DisableIfSDKDisabled] [FieldGroup("Auto Analytics")] [Header("Auto Analytics")]
+        public bool EnableAdAnalytics = false;
+
+        [DisableIfSDKDisabled] [FieldGroup("Auto Analytics")]
+        public bool EnablePurchaseAnalytics = false;
 
 
         [DisableIfSDKDisabled] [DisableIfAdAnalyticsDisabled] [FieldGroup("Ad Settings")] [Header("Ad Settings")]

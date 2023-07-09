@@ -19,22 +19,9 @@ namespace Kitrum.GeeklabSDK
                 return "";
             }
 
-            var creativeToken = ParseDeepLink(deepLink);
-
-            if (!string.IsNullOrEmpty(creativeToken))
-            {
-                TokenHandler.SetToken(creativeToken);
-            }
-
             return deepLink;
         }
     
-        private static string ParseDeepLink(string deepLink)
-        {
-            var regex = new System.Text.RegularExpressions.Regex(@"[=\/\\]([^=\/\\]*)$");
-            var match = regex.Match(deepLink);
-            return match.Success ? match.Groups[1].Value : "";
-        }
 
         public static string GetDeepLink()
         {

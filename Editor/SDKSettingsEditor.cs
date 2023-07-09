@@ -13,7 +13,7 @@ namespace Kitrum.GeeklabSDK
 {
     public class SDKSettingsEditor : EditorWindow
     {
-        private static Vector2 minWindowSize = new Vector2(250, 300);
+        private static Vector2 minWindowSize = new Vector2(250, 400);
         
         private bool missingValues;
         private string tokenInputField = "";
